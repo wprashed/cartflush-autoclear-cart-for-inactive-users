@@ -1,0 +1,162 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: CartFlush 1.2.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/cartflush-autoclear-cart-for-inactive-users/\n"
+"POT-Creation-Date: 2026-03-16 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: cartflush\n"
+
+#: includes/class-cartflush-plugin.php:82
+msgid "Your cart was cleared due to inactivity."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:40
+msgid "CartFlush Settings"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:41
+msgid "CartFlush"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:74
+msgid "Timeout Settings"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:81
+msgid "Default cart expiration"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:119
+msgid "Set a default inactivity window. Imported role and category rules can override it for specific carts."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:131
+msgid "minutes"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:132
+msgid "This fallback timeout is used when no imported rule matches the current customer or cart contents."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:161
+msgid "Please choose a JSON file to import."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:168
+msgid "The uploaded JSON file is invalid."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:177
+msgid "JSON settings imported successfully."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:191
+msgid "Please choose a CSV file to import."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:197
+msgid "The uploaded CSV file could not be read."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:204
+msgid "The CSV file is empty."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:251
+msgid "CSV rules imported successfully."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:292
+msgid "Version"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:293
+msgid "Settings"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:299
+msgid "Default Timeout"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:304
+msgid "Save Settings"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:310
+msgid "Import Full Settings"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:311
+msgid "Upload a JSON export to move CartFlush settings between sites."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:316
+msgid "Import JSON"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:321
+msgid "Import Rules from CSV"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:322
+msgid "Use type, key, and timeout_minutes columns to import role rules, category rules, or exclusions."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:327
+msgid "Import CSV"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:333
+msgid "Export Settings"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:334
+msgid "Download the current timeout, imported rules, and exclusions as a JSON snapshot."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:338
+msgid "Export JSON"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:344
+msgid "Imported Configuration Summary"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:347
+msgid "Role Rules"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:351
+msgid "Category Rules"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:355
+msgid "Excluded Product IDs"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:359
+msgid "Excluded Category Slugs"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:379
+msgid "None imported yet."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:387
+#, php-format
+msgid "%1$s: %2$d min"
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:418
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: includes/admin/class-cartflush-admin.php:290
+msgid "Protect your WooCommerce experience with rule-based cart cleanup, import/export tools, and product-aware exclusions."
+msgstr ""
