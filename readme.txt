@@ -4,7 +4,7 @@ Tags: woocommerce, cart, abandoned cart, cart timeout, cart cleanup
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
