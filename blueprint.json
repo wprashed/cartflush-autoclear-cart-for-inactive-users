@@ -1,0 +1,33 @@
+{
+  "landingPage": "/wp-admin/admin.php?page=cartflush",
+  "steps": [
+    {
+      "step": "installPlugin",
+      "pluginSlug": "woocommerce"
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "woocommerce/woocommerce.php"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php update_option('woocommerce_onboarding_profile', ['skipped' => true]); ?>"
+    },
+    {
+      "step": "installPlugin",
+      "pluginSlug": "cartflush-autoclear-cart-for-inactive-users"
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "cartflush-autoclear-cart-for-inactive-users/cartflush-autoclear-cart-for-inactive-users.php"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php wp_insert_post(['post_title'=>'Demo Product','post_type'=>'product','post_status'=>'publish']); ?>"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php update_option('cartflush_settings', ['timeout' => 5]); ?>"
+    }
+  ]
+}
