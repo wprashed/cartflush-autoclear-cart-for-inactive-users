@@ -1,13 +1,10 @@
 {
   "$schema": "https://playground.wordpress.net/blueprint-schema.json",
-  "landingPage": "/wp-admin/admin.php?",
+  "landingPage": "/wp-admin/admin.php?page=cartflush",
   "login": true,
   "preferredVersions": {
     "php": "8.2"
   },
-  "plugins": [
-    "https://downloads.wordpress.org/plugin/cartflush-autoclear-cart-for-inactive-users.2.0.0.zip",
-  ],
   "steps": [
     {
       "step": "installPlugin",
