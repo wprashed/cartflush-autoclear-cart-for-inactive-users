@@ -1,8 +1,4 @@
-Here’s a **WordPress.org–optimized version** of your README. This is cleaner, keyword-focused, and aligned with how plugins rank and convert on wp.org:
-
----
-
-## === CartFlush – Auto Clear WooCommerce Cart for Inactive Users ===
+# CartFlush – Auto Clear WooCommerce Cart for Inactive Users
 
 Contributors: wprashed
 Tags: woocommerce cart cleanup, abandoned cart, cart timeout, woocommerce optimization, cart management
@@ -17,7 +13,7 @@ Automatically clear inactive WooCommerce carts with advanced timeout rules, excl
 
 ---
 
-## == Description ==
+## Description
 
 CartFlush helps you automatically clear inactive WooCommerce carts, keeping your store clean, fast, and optimized.
 
@@ -27,7 +23,7 @@ Whether you want faster cart turnover, better session management, or cleaner aba
 
 ---
 
-## 🚀 Why Use CartFlush?
+### 🚀 Why Use CartFlush?
 
 * Prevent stale and abandoned carts from piling up
 * Improve WooCommerce session performance
@@ -37,7 +33,7 @@ Whether you want faster cart turnover, better session management, or cleaner aba
 
 ---
 
-## == Key Features ==
+## Key Features
 
 ### ⏱ Default Cart Timeout
 
@@ -180,7 +176,7 @@ When the plugin is deleted:
 
 ---
 
-## == How It Works ==
+## How It Works
 
 1. Customer adds items to cart
 2. Inactivity timer starts
@@ -195,7 +191,7 @@ When the plugin is deleted:
 
 ---
 
-## == Supported Import Formats ==
+## Supported Import Formats
 
 CSV headers:
 
@@ -217,7 +213,7 @@ CSV headers:
 
 ---
 
-## == Frequently Asked Questions ==
+## Frequently Asked Questions
 
 ### Does this work for guest users and logged-in users?
 
@@ -243,13 +239,13 @@ Yes. Export settings as JSON and import them on another site.
 
 ---
 
-### Does uninstall remove all data?
+### Does uninstalling remove all data?
 
 Yes. All plugin options are deleted during uninstall.
 
 ---
 
-## == Screenshots ==
+## Screenshots
 
 1. Clean and modern CartFlush settings panel
 2. CSV import interface for rules
@@ -258,7 +254,7 @@ Yes. All plugin options are deleted during uninstall.
 
 ---
 
-## == Changelog ==
+## Changelog
 
 = 2.0.0 =
 
