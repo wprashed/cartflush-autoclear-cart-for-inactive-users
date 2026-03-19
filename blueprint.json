@@ -5,18 +5,28 @@
   "preferredVersions": {
     "php": "8.2"
   },
-  "plugins": [
-    "https://downloads.wordpress.org/plugin/cartflush-autoclear-cart-for-inactive-users.2.0.0.zip",
-    "https://downloads.wordpress.org/plugin/woocommerce.10.6.1.zip",
-  ],
   "steps": [
     {
-      "step": "activatePlugin",
-      "pluginPath": "cartflush-autoclear-cart-for-inactive-users/cartflush-autoclear-cart-for-inactive-users.php"
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "url",
+        "url": "https://downloads.wordpress.org/plugin/woocommerce.10.6.1.zip"
+      }
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "url",
+        "url": "https://downloads.wordpress.org/plugin/cartflush-autoclear-cart-for-inactive-users.2.0.0.zip"
+      }
     },
     {
       "step": "activatePlugin",
       "pluginPath": "woocommerce/woocommerce.php"
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "cartflush-autoclear-cart-for-inactive-users/cartflush-autoclear-cart-for-inactive-users.php"
     }
   ]
 }
