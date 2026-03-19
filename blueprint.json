@@ -2,9 +2,6 @@
   "$schema": "https://playground.wordpress.net/blueprint-schema.json",
   "landingPage": "/wp-admin/admin.php?page=cartflush",
   "login": true,
-  "preferredVersions": {
-    "php": "8.2"
-  },
   "steps": [
     {
       "step": "installPlugin",
