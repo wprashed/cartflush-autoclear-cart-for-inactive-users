@@ -1,6 +1,6 @@
 {
   "$schema": "https://playground.wordpress.net/blueprint-schema.json",
-  "landingPage": "/wp-admin/admin.php?page=woocommerce",
+  "landingPage": "/wp-admin/admin.php?",
   "login": true,
   "preferredVersions": {
     "php": "8.2"
