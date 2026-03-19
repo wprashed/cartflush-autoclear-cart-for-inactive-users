@@ -23,8 +23,7 @@ Whether you want faster cart turnover, better session management, or cleaner aba
 
 == Live Demo ==
 
-🚀 Try Live Demo:  
-https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fwprashed%2Fcartflush-autoclear-cart-for-inactive-users%2F185b7faf5918e286fe9ca1fb1563d70455d4e095%2Fblueprint.json
+🚀 [Try Live Demo (No Setup Required)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fwprashed%2Fcartflush-autoclear-cart-for-inactive-users%2F185b7faf5918e286fe9ca1fb1563d70455d4e095%2Fblueprint.json)
 
 ---
 
