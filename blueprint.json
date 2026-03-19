@@ -1,29 +1,22 @@
 {
   "$schema": "https://playground.wordpress.net/blueprint-schema.json",
-  "landingPage": "/wp-admin/admin.php?page=cartflush",
+  "landingPage": "/wp-admin/admin.php?page=woocommerce",
   "login": true,
+  "preferredVersions": {
+    "php": "8.2"
+  },
+  "plugins": [
+    "https://downloads.wordpress.org/plugin/cartflush-autoclear-cart-for-inactive-users.2.0.0.zip",
+    "https://downloads.wordpress.org/plugin/woocommerce.10.6.1.zip",
+  ],
   "steps": [
     {
-      "step": "installPlugin",
-      "pluginData": {
-        "resource": "wordpress.org/plugins",
-        "slug": "woocommerce"
-      }
+      "step": "activatePlugin",
+      "pluginPath": "cartflush-autoclear-cart-for-inactive-users/cartflush-autoclear-cart-for-inactive-users.php"
     },
     {
       "step": "activatePlugin",
       "pluginPath": "woocommerce/woocommerce.php"
-    },
-    {
-      "step": "installPlugin",
-      "pluginData": {
-        "resource": "wordpress.org/plugins",
-        "slug": "cartflush-autoclear-cart-for-inactive-users"
-      }
-    },
-    {
-      "step": "activatePlugin",
-      "pluginPath": "cartflush-autoclear-cart-for-inactive-users/cartflush-autoclear-cart-for-inactive-users.php"
     }
   ]
 }
