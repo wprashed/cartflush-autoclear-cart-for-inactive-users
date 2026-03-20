@@ -22,9 +22,19 @@
 
 	document.addEventListener( 'click', function( event ) {
 		const button = event.target.closest( '[data-cartflush-add-row]' );
+		const removeButton = event.target.closest( '.cartflush-remove-row' );
 
 		if ( button ) {
 			addRow( { currentTarget: button } );
+			return;
+		}
+
+		if ( removeButton ) {
+			const row = removeButton.closest( 'tr' );
+
+			if ( row ) {
+				row.remove();
+			}
 		}
 	} );
 }() );
