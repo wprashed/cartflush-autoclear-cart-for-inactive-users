@@ -47,7 +47,7 @@ Set a global inactivity timeout (in minutes). If no other rules apply, this valu
 
 ### 👤 Role-Based Timeout Rules
 
-Define custom cart expiration times based on user roles.
+Define custom cart expiration times based on user roles directly from the CartFlush settings page under WooCommerce, or bulk import them with CSV.
 
 Examples:
 
@@ -61,7 +61,7 @@ Perfect for stores with different user types and behaviors.
 
 ### 🛍 Category-Based Timeout Rules
 
-Set cart timeout rules based on product categories.
+Set cart timeout rules based on product categories from the settings page or with CSV import.
 
 Use cases:
 
@@ -87,7 +87,7 @@ This ensures:
 
 ### 🚫 Product Exclusions
 
-Exclude specific products from cart clearing.
+Exclude specific products from cart clearing from the plugin settings page.
 
 If a cart contains an excluded product:
 → The cart will NOT be cleared.
@@ -103,9 +103,9 @@ If any product in the cart belongs to an excluded category:
 
 ---
 
-### 📥 CSV Import for Rules
+### 📥 Manual Rules and CSV Import
 
-Bulk import rules using CSV.
+Create and edit rules from the plugin settings page, or bulk import rules using CSV when that is faster.
 
 Supported types:
 
@@ -252,7 +252,7 @@ Yes. All plugin options are deleted during uninstall.
 ## == Screenshots ==
 
 1. Clean and modern CartFlush settings panel
-2. CSV import interface for rules
+2. Manual rule builder for roles, categories, and exclusions
 3. JSON export/import tools
 4. Active rules and exclusions overview
 
