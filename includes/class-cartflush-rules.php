@@ -33,57 +33,16 @@ class CartFlush_Rules {
 		$value    = is_array( $value ) ? $value : [];
 		$rules    = wp_parse_args( $value, $defaults );
 
-		$normalized_role_rules = [];
-		if ( is_array( $rules['role_rules'] ) ) {
-			foreach ( $rules['role_rules'] as $role => $timeout ) {
-				$role    = sanitize_key( $role );
-				$timeout = absint( $timeout );
-
-				if ( $role && $timeout > 0 ) {
-					$normalized_role_rules[ $role ] = $timeout;
-				}
-			}
-		}
-
-		$normalized_category_rules = [];
-		if ( is_array( $rules['category_rules'] ) ) {
-			foreach ( $rules['category_rules'] as $slug => $timeout ) {
-				$slug    = sanitize_title( $slug );
-				$timeout = absint( $timeout );
-
-				if ( $slug && $timeout > 0 ) {
-					$normalized_category_rules[ $slug ] = $timeout;
-				}
-			}
-		}
-
-		$excluded_products = [];
-		if ( is_array( $rules['excluded_products'] ) ) {
-			foreach ( $rules['excluded_products'] as $product_id ) {
-				$product_id = absint( $product_id );
-
-				if ( $product_id > 0 ) {
-					$excluded_products[] = $product_id;
-				}
-			}
-		}
-
-		$excluded_categories = [];
-		if ( is_array( $rules['excluded_categories'] ) ) {
-			foreach ( $rules['excluded_categories'] as $slug ) {
-				$slug = sanitize_title( $slug );
-
-				if ( $slug ) {
-					$excluded_categories[] = $slug;
-				}
-			}
-		}
-
 		return [
-			'role_rules'          => $normalized_role_rules,
-			'category_rules'      => $normalized_category_rules,
-			'excluded_products'   => array_values( array_unique( $excluded_products ) ),
-			'excluded_categories' => array_values( array_unique( $excluded_categories ) ),
+			'customer_type_rules' => $this->normalize_customer_type_rules( $rules['customer_type_rules'] ),
+			'role_rules'          => $this->normalize_timeout_map( $rules['role_rules'], 'sanitize_key' ),
+			'category_rules'      => $this->normalize_timeout_map( $rules['category_rules'], 'sanitize_title' ),
+			'tag_rules'           => $this->normalize_timeout_map( $rules['tag_rules'], 'sanitize_title' ),
+			'product_rules'       => $this->normalize_product_timeout_rules( $rules['product_rules'] ),
+			'excluded_roles'      => $this->normalize_string_list( $rules['excluded_roles'], 'sanitize_key' ),
+			'excluded_products'   => $this->normalize_integer_list( $rules['excluded_products'] ),
+			'excluded_categories' => $this->normalize_string_list( $rules['excluded_categories'], 'sanitize_title' ),
+			'excluded_tags'       => $this->normalize_string_list( $rules['excluded_tags'], 'sanitize_title' ),
 		];
 	}
 
@@ -101,6 +60,15 @@ class CartFlush_Rules {
 		$rules      = $this->get_rules_option();
 		$user       = wp_get_current_user();
 		$cart_items = WC()->cart->get_cart();
+		$is_guest   = ! ( $user instanceof WP_User ) || 0 === (int) $user->ID;
+
+		if ( $is_guest && isset( $rules['customer_type_rules']['guest'] ) ) {
+			$timeouts[] = (int) $rules['customer_type_rules']['guest'];
+		}
+
+		if ( ! $is_guest && isset( $rules['customer_type_rules']['logged_in'] ) ) {
+			$timeouts[] = (int) $rules['customer_type_rules']['logged_in'];
+		}
 
 		if ( $user instanceof WP_User && ! empty( $user->roles ) ) {
 			foreach ( $user->roles as $role ) {
@@ -113,14 +81,25 @@ class CartFlush_Rules {
 		}
 
 		foreach ( $cart_items as $cart_item ) {
-			$product_id   = isset( $cart_item['product_id'] ) ? absint( $cart_item['product_id'] ) : 0;
-			$category_ids = $product_id ? wc_get_product_term_ids( $product_id, 'product_cat' ) : [];
+			$product_id = isset( $cart_item['product_id'] ) ? absint( $cart_item['product_id'] ) : 0;
 
-			foreach ( $category_ids as $category_id ) {
-				$term = get_term( $category_id, 'product_cat' );
+			if ( ! $product_id ) {
+				continue;
+			}
 
-				if ( $term && ! is_wp_error( $term ) && isset( $rules['category_rules'][ $term->slug ] ) ) {
-					$timeouts[] = (int) $rules['category_rules'][ $term->slug ];
+			if ( isset( $rules['product_rules'][ $product_id ] ) ) {
+				$timeouts[] = (int) $rules['product_rules'][ $product_id ];
+			}
+
+			foreach ( $this->get_product_term_slugs( $product_id, 'product_cat' ) as $slug ) {
+				if ( isset( $rules['category_rules'][ $slug ] ) ) {
+					$timeouts[] = (int) $rules['category_rules'][ $slug ];
+				}
+			}
+
+			foreach ( $this->get_product_term_slugs( $product_id, 'product_tag' ) as $slug ) {
+				if ( isset( $rules['tag_rules'][ $slug ] ) ) {
+					$timeouts[] = (int) $rules['tag_rules'][ $slug ];
 				}
 			}
 		}
@@ -136,7 +115,7 @@ class CartFlush_Rules {
 	}
 
 	/**
-	 * Determine whether the current cart contains excluded products or categories.
+	 * Determine whether the current cart contains excluded items.
 	 *
 	 * @return bool
 	 */
@@ -146,6 +125,15 @@ class CartFlush_Rules {
 		}
 
 		$rules = $this->get_rules_option();
+		$user  = wp_get_current_user();
+
+		if ( $user instanceof WP_User && ! empty( $user->roles ) ) {
+			foreach ( $user->roles as $role ) {
+				if ( in_array( sanitize_key( $role ), $rules['excluded_roles'], true ) ) {
+					return true;
+				}
+			}
+		}
 
 		foreach ( WC()->cart->get_cart() as $cart_item ) {
 			$product_id = isset( $cart_item['product_id'] ) ? absint( $cart_item['product_id'] ) : 0;
@@ -154,12 +142,14 @@ class CartFlush_Rules {
 				return true;
 			}
 
-			$category_ids = $product_id ? wc_get_product_term_ids( $product_id, 'product_cat' ) : [];
+			foreach ( $this->get_product_term_slugs( $product_id, 'product_cat' ) as $slug ) {
+				if ( in_array( $slug, $rules['excluded_categories'], true ) ) {
+					return true;
+				}
+			}
 
-			foreach ( $category_ids as $category_id ) {
-				$term = get_term( $category_id, 'product_cat' );
-
-				if ( $term && ! is_wp_error( $term ) && in_array( $term->slug, $rules['excluded_categories'], true ) ) {
+			foreach ( $this->get_product_term_slugs( $product_id, 'product_tag' ) as $slug ) {
+				if ( in_array( $slug, $rules['excluded_tags'], true ) ) {
 					return true;
 				}
 			}
@@ -175,10 +165,172 @@ class CartFlush_Rules {
 	 */
 	public function get_default_rules() {
 		return [
+			'customer_type_rules' => [],
 			'role_rules'          => [],
 			'category_rules'      => [],
+			'tag_rules'           => [],
+			'product_rules'       => [],
+			'excluded_roles'      => [],
 			'excluded_products'   => [],
 			'excluded_categories' => [],
+			'excluded_tags'       => [],
 		];
+	}
+
+	/**
+	 * Normalize customer type rules.
+	 *
+	 * @param mixed $rules Customer type rules.
+	 * @return array<string, int>
+	 */
+	private function normalize_customer_type_rules( $rules ) {
+		$allowed    = [ 'guest', 'logged_in' ];
+		$normalized = [];
+
+		if ( ! is_array( $rules ) ) {
+			return $normalized;
+		}
+
+		foreach ( $rules as $type => $timeout ) {
+			$type    = sanitize_key( $type );
+			$timeout = absint( $timeout );
+
+			if ( in_array( $type, $allowed, true ) && $timeout > 0 ) {
+				$normalized[ $type ] = $timeout;
+			}
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * Normalize a generic timeout map.
+	 *
+	 * @param mixed    $rules Timeout rules.
+	 * @param callable $sanitizer Key sanitizer.
+	 * @return array<string, int>
+	 */
+	private function normalize_timeout_map( $rules, $sanitizer ) {
+		$normalized = [];
+
+		if ( ! is_array( $rules ) ) {
+			return $normalized;
+		}
+
+		foreach ( $rules as $key => $timeout ) {
+			$key     = call_user_func( $sanitizer, $key );
+			$timeout = absint( $timeout );
+
+			if ( $key && $timeout > 0 ) {
+				$normalized[ $key ] = $timeout;
+			}
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * Normalize product-specific timeout rules.
+	 *
+	 * @param mixed $rules Product rules.
+	 * @return array<int, int>
+	 */
+	private function normalize_product_timeout_rules( $rules ) {
+		$normalized = [];
+
+		if ( ! is_array( $rules ) ) {
+			return $normalized;
+		}
+
+		foreach ( $rules as $product_id => $timeout ) {
+			$product_id = absint( $product_id );
+			$timeout    = absint( $timeout );
+
+			if ( $product_id > 0 && $timeout > 0 ) {
+				$normalized[ $product_id ] = $timeout;
+			}
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * Normalize a list of integer IDs.
+	 *
+	 * @param mixed $items List value.
+	 * @return array<int>
+	 */
+	private function normalize_integer_list( $items ) {
+		$normalized = [];
+
+		if ( ! is_array( $items ) ) {
+			return $normalized;
+		}
+
+		foreach ( $items as $item ) {
+			$item = absint( $item );
+
+			if ( $item > 0 ) {
+				$normalized[] = $item;
+			}
+		}
+
+		return array_values( array_unique( $normalized ) );
+	}
+
+	/**
+	 * Normalize a list of strings.
+	 *
+	 * @param mixed    $items List value.
+	 * @param callable $sanitizer Item sanitizer.
+	 * @return array<int, string>
+	 */
+	private function normalize_string_list( $items, $sanitizer ) {
+		$normalized = [];
+
+		if ( ! is_array( $items ) ) {
+			return $normalized;
+		}
+
+		foreach ( $items as $item ) {
+			$item = call_user_func( $sanitizer, $item );
+
+			if ( $item ) {
+				$normalized[] = $item;
+			}
+		}
+
+		return array_values( array_unique( $normalized ) );
+	}
+
+	/**
+	 * Get sanitized term slugs for a product and taxonomy.
+	 *
+	 * @param int    $product_id Product ID.
+	 * @param string $taxonomy Taxonomy name.
+	 * @return array<int, string>
+	 */
+	private function get_product_term_slugs( $product_id, $taxonomy ) {
+		$product_id = absint( $product_id );
+
+		if ( $product_id <= 0 ) {
+			return [];
+		}
+
+		$terms = get_the_terms( $product_id, $taxonomy );
+
+		if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
+			return [];
+		}
+
+		$slugs = [];
+
+		foreach ( $terms as $term ) {
+			if ( isset( $term->slug ) ) {
+				$slugs[] = sanitize_title( $term->slug );
+			}
+		}
+
+		return array_values( array_unique( array_filter( $slugs ) ) );
 	}
 }
