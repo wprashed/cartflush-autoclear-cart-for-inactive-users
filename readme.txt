@@ -109,10 +109,15 @@ Create and edit rules from the plugin settings page, or bulk import rules using 
 
 Supported types:
 
+* customer_type
 * role
+* product_rule
 * category
+* tag
+* excluded_role
 * excluded_product
 * excluded_category
+* excluded_tag
 
 Quickly configure large stores without manual setup.
 
@@ -210,10 +215,14 @@ CSV headers:
 
 ### Example:
 
+`customer_type,guest,20`
 `role,customer,30`
-`category,subscription-box,10`
+`product_rule,321,10`
+`tag,flash-sale,15`
+`excluded_role,wholesale_customer,`
 `excluded_product,123,`
 `excluded_category,high-ticket,`
+`excluded_tag,seasonal,`
 
 ---
 
