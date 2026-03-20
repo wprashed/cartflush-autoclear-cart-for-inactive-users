@@ -91,6 +91,10 @@
 	margin-top: 14px;
 }
 
+.cartflush-settings-form {
+	margin-top: 0;
+}
+
 .cartflush-card input[type="file"] {
 	width: 100%;
 	padding: 10px;
@@ -107,6 +111,61 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.cartflush-settings-form .form-table {
+	margin-bottom: 12px;
+}
+
+.cartflush-editor-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 18px;
+	margin-top: 12px;
+}
+
+.cartflush-editor-grid--secondary {
+	margin-top: 18px;
+}
+
+.cartflush-editor-panel {
+	padding: 18px;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+	background: #f8fafc;
+}
+
+.cartflush-editor-panel__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	margin-bottom: 14px;
+}
+
+.cartflush-editor-panel__header h3 {
+	margin-bottom: 4px;
+}
+
+.cartflush-editor-panel__header p {
+	margin: 0;
+	color: #475569;
+}
+
+.cartflush-table-wrap {
+	overflow-x: auto;
+}
+
+.cartflush-rule-table th,
+.cartflush-rule-table td {
+	padding: 12px;
+	vertical-align: middle;
+}
+
+.cartflush-rule-table select,
+.cartflush-rule-table input[type="number"] {
+	width: 100%;
+	max-width: 100%;
 }
 
 .cartflush-summary {
@@ -133,5 +192,9 @@
 
 	.cartflush-card--primary {
 		grid-column: span 1;
+	}
+
+	.cartflush-editor-panel__header {
+		flex-direction: column;
 	}
 }
