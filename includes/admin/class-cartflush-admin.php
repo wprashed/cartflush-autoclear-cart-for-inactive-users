@@ -331,22 +331,50 @@ class CartFlush_Admin {
 		$rules      = $this->rules->get_rules_option();
 		$roles      = $this->get_role_options();
 		$categories = $this->get_product_category_options();
+		$stats      = [
+			'roles'               => count( $rules['role_rules'] ),
+			'categories'          => count( $rules['category_rules'] ),
+			'excluded_products'   => count( $rules['excluded_products'] ),
+			'excluded_categories' => count( $rules['excluded_categories'] ),
+		];
 		?>
 		<div class="wrap cartflush-admin">
 			<div class="cartflush-hero">
-				<div>
+				<div class="cartflush-hero__content">
+					<span class="cartflush-eyebrow"><?php esc_html_e( 'WooCommerce Cart Automation', 'cartflush' ); ?></span>
 					<h1><?php esc_html_e( 'CartFlush Settings', 'cartflush' ); ?></h1>
 					<p><?php esc_html_e( 'Manage your default timeout, add custom rules directly from this screen, and still use CSV or JSON tools when you need bulk changes or migrations.', 'cartflush' ); ?></p>
+					<div class="cartflush-hero__stats">
+						<div class="cartflush-stat">
+							<strong><?php echo esc_html( $stats['roles'] ); ?></strong>
+							<span><?php esc_html_e( 'Role rules', 'cartflush' ); ?></span>
+						</div>
+						<div class="cartflush-stat">
+							<strong><?php echo esc_html( $stats['categories'] ); ?></strong>
+							<span><?php esc_html_e( 'Category rules', 'cartflush' ); ?></span>
+						</div>
+						<div class="cartflush-stat">
+							<strong><?php echo esc_html( $stats['excluded_products'] + $stats['excluded_categories'] ); ?></strong>
+							<span><?php esc_html_e( 'Exclusions', 'cartflush' ); ?></span>
+						</div>
+					</div>
 				</div>
 				<div class="cartflush-hero__meta">
 					<span><?php esc_html_e( 'Version', 'cartflush' ); ?> <?php echo esc_html( CARTFLUSH_VERSION ); ?></span>
 					<span><?php esc_html_e( 'WooCommerce', 'cartflush' ); ?></span>
+					<span><?php esc_html_e( 'Rule Builder Enabled', 'cartflush' ); ?></span>
 				</div>
 			</div>
 
 			<div class="cartflush-grid">
 				<div class="cartflush-card cartflush-card--primary">
-					<h2><?php esc_html_e( 'Timeout and Rule Settings', 'cartflush' ); ?></h2>
+					<div class="cartflush-card__heading">
+						<div>
+							<span class="cartflush-chip"><?php esc_html_e( 'Primary Controls', 'cartflush' ); ?></span>
+							<h2><?php esc_html_e( 'Timeout and Rule Settings', 'cartflush' ); ?></h2>
+							<p><?php esc_html_e( 'Start with a global timeout, then layer on targeted rules for roles, categories, and exclusions.', 'cartflush' ); ?></p>
+						</div>
+					</div>
 					<form method="post" action="options.php" class="cartflush-settings-form">
 						<?php
 						settings_fields( 'cartflush_settings_group' );
@@ -357,10 +385,11 @@ class CartFlush_Admin {
 							<div class="cartflush-editor-panel">
 								<div class="cartflush-editor-panel__header">
 									<div>
+										<span class="cartflush-panel__tag"><?php esc_html_e( 'Customers', 'cartflush' ); ?></span>
 										<h3><?php esc_html_e( 'Role-Based Rules', 'cartflush' ); ?></h3>
 										<p><?php esc_html_e( 'Assign a custom timeout to specific user roles.', 'cartflush' ); ?></p>
 									</div>
-									<button type="button" class="button button-secondary" data-cartflush-add-row="role-rule"><?php esc_html_e( 'Add Role Rule', 'cartflush' ); ?></button>
+									<button type="button" class="button cartflush-action" data-cartflush-add-row="role-rule"><?php esc_html_e( 'Add Role Rule', 'cartflush' ); ?></button>
 								</div>
 								<div class="cartflush-table-wrap">
 									<table class="widefat striped cartflush-rule-table">
@@ -368,6 +397,7 @@ class CartFlush_Admin {
 											<tr>
 												<th><?php esc_html_e( 'Role', 'cartflush' ); ?></th>
 												<th><?php esc_html_e( 'Timeout (minutes)', 'cartflush' ); ?></th>
+												<th class="cartflush-rule-table__action"><?php esc_html_e( 'Remove', 'cartflush' ); ?></th>
 											</tr>
 										</thead>
 										<tbody data-cartflush-rows="role-rule">
@@ -380,10 +410,11 @@ class CartFlush_Admin {
 							<div class="cartflush-editor-panel">
 								<div class="cartflush-editor-panel__header">
 									<div>
+										<span class="cartflush-panel__tag"><?php esc_html_e( 'Products', 'cartflush' ); ?></span>
 										<h3><?php esc_html_e( 'Category-Based Rules', 'cartflush' ); ?></h3>
 										<p><?php esc_html_e( 'Set a shorter or longer timeout for specific product categories.', 'cartflush' ); ?></p>
 									</div>
-									<button type="button" class="button button-secondary" data-cartflush-add-row="category-rule"><?php esc_html_e( 'Add Category Rule', 'cartflush' ); ?></button>
+									<button type="button" class="button cartflush-action" data-cartflush-add-row="category-rule"><?php esc_html_e( 'Add Category Rule', 'cartflush' ); ?></button>
 								</div>
 								<div class="cartflush-table-wrap">
 									<table class="widefat striped cartflush-rule-table">
@@ -391,6 +422,7 @@ class CartFlush_Admin {
 											<tr>
 												<th><?php esc_html_e( 'Category', 'cartflush' ); ?></th>
 												<th><?php esc_html_e( 'Timeout (minutes)', 'cartflush' ); ?></th>
+												<th class="cartflush-rule-table__action"><?php esc_html_e( 'Remove', 'cartflush' ); ?></th>
 											</tr>
 										</thead>
 										<tbody data-cartflush-rows="category-rule">
@@ -405,16 +437,18 @@ class CartFlush_Admin {
 							<div class="cartflush-editor-panel">
 								<div class="cartflush-editor-panel__header">
 									<div>
+										<span class="cartflush-panel__tag"><?php esc_html_e( 'Safe List', 'cartflush' ); ?></span>
 										<h3><?php esc_html_e( 'Excluded Products', 'cartflush' ); ?></h3>
 										<p><?php esc_html_e( 'If any of these product IDs are in the cart, CartFlush will skip clearing it.', 'cartflush' ); ?></p>
 									</div>
-									<button type="button" class="button button-secondary" data-cartflush-add-row="excluded-product"><?php esc_html_e( 'Add Product', 'cartflush' ); ?></button>
+									<button type="button" class="button cartflush-action" data-cartflush-add-row="excluded-product"><?php esc_html_e( 'Add Product', 'cartflush' ); ?></button>
 								</div>
 								<div class="cartflush-table-wrap">
 									<table class="widefat striped cartflush-rule-table">
 										<thead>
 											<tr>
 												<th><?php esc_html_e( 'Product ID', 'cartflush' ); ?></th>
+												<th class="cartflush-rule-table__action"><?php esc_html_e( 'Remove', 'cartflush' ); ?></th>
 											</tr>
 										</thead>
 										<tbody data-cartflush-rows="excluded-product">
@@ -427,16 +461,18 @@ class CartFlush_Admin {
 							<div class="cartflush-editor-panel">
 								<div class="cartflush-editor-panel__header">
 									<div>
+										<span class="cartflush-panel__tag"><?php esc_html_e( 'Safe List', 'cartflush' ); ?></span>
 										<h3><?php esc_html_e( 'Excluded Categories', 'cartflush' ); ?></h3>
 										<p><?php esc_html_e( 'If a cart contains products from these categories, CartFlush will leave the cart untouched.', 'cartflush' ); ?></p>
 									</div>
-									<button type="button" class="button button-secondary" data-cartflush-add-row="excluded-category"><?php esc_html_e( 'Add Category', 'cartflush' ); ?></button>
+									<button type="button" class="button cartflush-action" data-cartflush-add-row="excluded-category"><?php esc_html_e( 'Add Category', 'cartflush' ); ?></button>
 								</div>
 								<div class="cartflush-table-wrap">
 									<table class="widefat striped cartflush-rule-table">
 										<thead>
 											<tr>
 												<th><?php esc_html_e( 'Category', 'cartflush' ); ?></th>
+												<th class="cartflush-rule-table__action"><?php esc_html_e( 'Remove', 'cartflush' ); ?></th>
 											</tr>
 										</thead>
 										<tbody data-cartflush-rows="excluded-category">
@@ -447,11 +483,18 @@ class CartFlush_Admin {
 							</div>
 						</div>
 
-						<?php submit_button( __( 'Save Settings', 'cartflush' ) ); ?>
+						<div class="cartflush-savebar">
+							<div>
+								<strong><?php esc_html_e( 'Ready to apply changes?', 'cartflush' ); ?></strong>
+								<p><?php esc_html_e( 'Saving updates the live rule set used for cart cleanup immediately.', 'cartflush' ); ?></p>
+							</div>
+							<?php submit_button( __( 'Save Settings', 'cartflush' ), 'primary cartflush-savebar__button', 'submit', false ); ?>
+						</div>
 					</form>
 				</div>
 
 				<div class="cartflush-card">
+					<span class="cartflush-chip"><?php esc_html_e( 'Migration', 'cartflush' ); ?></span>
 					<h2><?php esc_html_e( 'Import Full Settings', 'cartflush' ); ?></h2>
 					<p><?php esc_html_e( 'Upload a JSON export to move CartFlush settings between sites.', 'cartflush' ); ?></p>
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
@@ -463,6 +506,7 @@ class CartFlush_Admin {
 				</div>
 
 				<div class="cartflush-card">
+					<span class="cartflush-chip"><?php esc_html_e( 'Bulk Setup', 'cartflush' ); ?></span>
 					<h2><?php esc_html_e( 'Import Rules from CSV', 'cartflush' ); ?></h2>
 					<p><?php esc_html_e( 'You can still bulk import with type, key, and timeout_minutes columns when that is faster for your workflow.', 'cartflush' ); ?></p>
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
@@ -475,6 +519,7 @@ class CartFlush_Admin {
 				</div>
 
 				<div class="cartflush-card">
+					<span class="cartflush-chip"><?php esc_html_e( 'Backup', 'cartflush' ); ?></span>
 					<h2><?php esc_html_e( 'Export Settings', 'cartflush' ); ?></h2>
 					<p><?php esc_html_e( 'Download the current timeout, rules, and exclusions as a JSON snapshot.', 'cartflush' ); ?></p>
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -486,7 +531,13 @@ class CartFlush_Admin {
 			</div>
 
 			<div class="cartflush-card cartflush-card--wide">
-				<h2><?php esc_html_e( 'Saved Configuration Summary', 'cartflush' ); ?></h2>
+				<div class="cartflush-card__heading">
+					<div>
+						<span class="cartflush-chip"><?php esc_html_e( 'Overview', 'cartflush' ); ?></span>
+						<h2><?php esc_html_e( 'Saved Configuration Summary', 'cartflush' ); ?></h2>
+						<p><?php esc_html_e( 'A quick snapshot of the rules currently stored in CartFlush.', 'cartflush' ); ?></p>
+					</div>
+				</div>
 				<div class="cartflush-summary">
 					<div>
 						<h3><?php esc_html_e( 'Role Rules', 'cartflush' ); ?></h3>
@@ -511,6 +562,7 @@ class CartFlush_Admin {
 				<tr>
 					<td><?php $this->render_select_field( 'cartflush_import_rules[role_rules][{{index}}][role]', '', $roles, __( 'Select a role', 'cartflush' ) ); ?></td>
 					<td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[role_rules][{{index}}][timeout]" value=""></td>
+					<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 				</tr>
 			</script>
 
@@ -518,18 +570,21 @@ class CartFlush_Admin {
 				<tr>
 					<td><?php $this->render_select_field( 'cartflush_import_rules[category_rules][{{index}}][slug]', '', $categories, __( 'Select a category', 'cartflush' ) ); ?></td>
 					<td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[category_rules][{{index}}][timeout]" value=""></td>
+					<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 				</tr>
 			</script>
 
 			<script type="text/html" id="tmpl-cartflush-excluded-product">
 				<tr>
 					<td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[excluded_products][{{index}}][product_id]" value=""></td>
+					<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 				</tr>
 			</script>
 
 			<script type="text/html" id="tmpl-cartflush-excluded-category">
 				<tr>
 					<td><?php $this->render_select_field( 'cartflush_import_rules[excluded_categories][{{index}}][slug]', '', $categories, __( 'Select a category', 'cartflush' ) ); ?></td>
+					<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 				</tr>
 			</script>
 		</div>
@@ -626,6 +681,7 @@ class CartFlush_Admin {
 		<tr>
 			<td><?php $this->render_select_field( 'cartflush_import_rules[role_rules][' . $index . '][role]', (string) $role, $roles, __( 'Select a role', 'cartflush' ) ); ?></td>
 			<td><input type="number" min="1" step="1" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[role_rules][' . $index . '][timeout]' ); ?>" value="<?php echo esc_attr( $timeout ); ?>"></td>
+			<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 		</tr>
 		<?php
 		return (string) ob_get_clean();
@@ -646,6 +702,7 @@ class CartFlush_Admin {
 		<tr>
 			<td><?php $this->render_select_field( 'cartflush_import_rules[category_rules][' . $index . '][slug]', (string) $slug, $categories, __( 'Select a category', 'cartflush' ) ); ?></td>
 			<td><input type="number" min="1" step="1" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[category_rules][' . $index . '][timeout]' ); ?>" value="<?php echo esc_attr( $timeout ); ?>"></td>
+			<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 		</tr>
 		<?php
 		return (string) ob_get_clean();
@@ -663,6 +720,7 @@ class CartFlush_Admin {
 		?>
 		<tr>
 			<td><input type="number" min="1" step="1" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[excluded_products][' . $index . '][product_id]' ); ?>" value="<?php echo esc_attr( $product_id ); ?>"></td>
+			<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 		</tr>
 		<?php
 		return (string) ob_get_clean();
@@ -681,6 +739,7 @@ class CartFlush_Admin {
 		?>
 		<tr>
 			<td><?php $this->render_select_field( 'cartflush_import_rules[excluded_categories][' . $index . '][slug]', (string) $slug, $categories, __( 'Select a category', 'cartflush' ) ); ?></td>
+			<td class="cartflush-row-action"><button type="button" class="button-link-delete cartflush-remove-row"><?php esc_html_e( 'Remove', 'cartflush' ); ?></button></td>
 		</tr>
 		<?php
 		return (string) ob_get_clean();
