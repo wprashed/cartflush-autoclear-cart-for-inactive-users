@@ -185,8 +185,8 @@ Yes. All plugin options are deleted during uninstall.
 == Screenshots ==
 
 1. Modern CartFlush settings page under WooCommerce
-2. Manual rule builder for timeout rules and exclusions
-3. CSV and JSON import/export tools
+2. Manual rule builder for timeout rules, CSV and JSON import/export tools 
+3. Exclusion Rules
 4. Saved configuration overview
 
 == Changelog ==
