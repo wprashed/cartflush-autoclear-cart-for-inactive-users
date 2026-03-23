@@ -1,111 +1,136 @@
-## === CartFlush – Auto Clear WooCommerce Cart for Inactive Users ===
+=== CartFlush - Auto Clear WooCommerce Cart for Inactive Users ===
 
 Contributors: wprashed
 Tags: woocommerce cart cleanup, abandoned cart, cart timeout, woocommerce optimization, cart management
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPLv2 or later
-License URI: [https://www.gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html)
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Automatically clear inactive WooCommerce carts with advanced timeout rules, exclusions, and import/export tools.
 
----
-
-## == Description ==
+== Description ==
 
 CartFlush helps you automatically clear inactive WooCommerce carts, keeping your store clean, fast, and optimized.
 
-Instead of relying on a basic timeout, CartFlush gives you full control over how cart expiration works. You can define different timeout rules based on user roles, product categories, and exclusions—making it flexible enough for real-world eCommerce scenarios.
+Instead of relying on a single timeout, CartFlush gives you full control over cart expiration from one settings screen under WooCommerce. You can define different timeout rules based on customer type, user roles, products, categories, and tags, then add exclusions for carts that should never be cleared automatically.
 
 Whether you want faster cart turnover, better session management, or cleaner abandoned cart handling, CartFlush gives you the tools to do it properly.
 
 == Live Demo ==
 
-🚀 [Try Live Demo (No Setup Required)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fwprashed%2Fcartflush-autoclear-cart-for-inactive-users%2F185b7faf5918e286fe9ca1fb1563d70455d4e095%2Fblueprint.json)
+[Try Live Demo (No Setup Required)](https://playground.wordpress.net/?blueprint-url=https%3A%2F%2Fraw.githubusercontent.com%2Fwprashed%2Fcartflush-autoclear-cart-for-inactive-users%2F185b7faf5918e286fe9ca1fb1563d70455d4e095%2Fblueprint.json)
 
----
-
-## 🚀 Why Use CartFlush?
+== Why Use CartFlush? ==
 
 * Prevent stale and abandoned carts from piling up
 * Improve WooCommerce session performance
-* Apply smarter rules based on users and products
-* Save time with import/export configuration tools
-* Maintain clean and optimized cart behavior
+* Apply smarter rules based on customers and products
+* Manage rules visually from the WooCommerce settings page
+* Import or export rules for fast setup and migration
 
----
+== Key Features ==
 
-## == Key Features ==
+=== Default Cart Timeout ===
 
-### ⏱ Default Cart Timeout
+Set a global inactivity timeout in minutes. If no other rules apply, this value determines when a cart is cleared.
 
-Set a global inactivity timeout (in minutes). If no other rules apply, this value determines when a cart is cleared.
+=== Visual Rule Builder ===
 
----
+Create and edit cart timeout rules directly from the CartFlush settings page under WooCommerce. No CSV import is required for day-to-day management.
 
-### 👤 Role-Based Timeout Rules
+=== Customer Type Rules ===
 
-Define custom cart expiration times based on user roles directly from the CartFlush settings page under WooCommerce, or bulk import them with CSV.
+Define separate timeouts for:
+
+* Guest customers
+* Logged-in customers
+
+=== Role-Based Timeout Rules ===
+
+Define custom cart expiration times for specific user roles.
 
 Examples:
 
-* Customers → 30 minutes
-* Subscribers → 60 minutes
-* Wholesale users → 120 minutes
+* Customers - 30 minutes
+* Subscribers - 60 minutes
+* Wholesale users - 120 minutes
 
-Perfect for stores with different user types and behaviors.
+=== Product, Category, and Tag Rules ===
 
----
+Apply specific timeout values based on:
 
-### 🛍 Category-Based Timeout Rules
+* Product ID
+* Product category
+* Product tag
 
-Set cart timeout rules based on product categories from the settings page or with CSV import.
+This makes it easy to create shorter or longer expiration windows for special items, campaigns, or collections.
 
-Use cases:
+=== Smart Timeout Logic ===
 
-* Flash sale items → shorter timeout
-* Subscription products → shorter timeout
-* High-value products → longer timeout
+When multiple timeout rules apply, CartFlush automatically uses the shortest valid timeout.
 
-CartFlush checks all items in the cart and applies the most relevant rule.
+=== Exclusion Rules ===
 
----
+Prevent cart clearing entirely for matching carts using:
 
-### ⚡ Smart Timeout Logic
+* Excluded roles
+* Excluded products
+* Excluded categories
+* Excluded tags
 
-When multiple rules apply, CartFlush automatically selects the **shortest timeout**.
+=== CSV Import for Bulk Rules ===
 
-This ensures:
+Bulk import rule data with CSV when that is faster than manual entry.
 
-* Predictable behavior
-* Better control over urgency
-* No rule conflicts
+Supported CSV types:
 
----
+* customer_type
+* role
+* product_rule
+* category
+* tag
+* excluded_role
+* excluded_product
+* excluded_category
+* excluded_tag
 
-### 🚫 Product Exclusions
+=== JSON Import and Export ===
 
-Exclude specific products from cart clearing from the plugin settings page.
+Export the full CartFlush configuration as JSON for backup or migration, then import it on another store when needed.
 
-If a cart contains an excluded product:
-→ The cart will NOT be cleared.
+=== WooCommerce Menu Integration ===
 
----
+The CartFlush settings page is available directly under the WooCommerce admin menu for quicker access.
 
-### 📂 Category Exclusions
+=== Lightweight and Efficient ===
 
-Exclude entire categories from auto-clear.
+CartFlush focuses only on inactivity tracking, rule evaluation, and cart clearing without adding unnecessary overhead.
 
-If any product in the cart belongs to an excluded category:
-→ Cart clearing is skipped.
+=== Translation Ready ===
 
----
+Includes the `cartflush` text domain for localization.
 
-### 📥 Manual Rules and CSV Import
+=== Clean Uninstall ===
 
-Create and edit rules from the plugin settings page, or bulk import rules using CSV when that is faster.
+When the plugin is deleted, CartFlush removes its stored settings automatically.
+
+== How It Works ==
+
+1. A customer adds items to the cart.
+2. The inactivity timer begins.
+3. CartFlush checks the default timeout and any matching timeout rules.
+4. The shortest valid timeout is selected.
+5. If an exclusion rule matches, cart clearing is skipped.
+6. The cart is cleared after the final timeout is reached.
+
+== Supported Import Formats ==
+
+CSV headers:
+
+`type,key,timeout_minutes`
 
 Supported types:
 
@@ -119,155 +144,62 @@ Supported types:
 * excluded_category
 * excluded_tag
 
-Quickly configure large stores without manual setup.
-
----
-
-### 📤 JSON Export (Full Backup)
-
-Export all settings into a JSON file.
-
-Includes:
-
-* Default timeout
-* Role rules
-* Category rules
-* Exclusions
-
-Perfect for backups and migrations.
-
----
-
-### 🔁 JSON Import (Quick Setup)
-
-Import settings instantly on another site.
-
-Ideal for:
-
-* Agencies
-* Multi-store setups
-* Staging → production deployment
-
----
-
-### 👥 Works for Guests & Logged-in Users
-
-CartFlush uses WooCommerce sessions, so it works for:
-
-* Guest users
-* Logged-in customers
-
-No additional configuration required.
-
----
-
-### 🎯 Lightweight & Efficient
-
-No unnecessary overhead. The plugin focuses only on:
-
-* Tracking inactivity
-* Applying rules
-* Clearing carts
-
----
-
-### 🌍 Translation Ready
-
-Includes text domain and POT file for easy localization.
-
----
-
-### 🧹 Clean Uninstall
-
-When the plugin is deleted:
-
-* All data and settings are removed automatically
-
----
-
-## == How It Works ==
-
-1. Customer adds items to cart
-2. Inactivity timer starts
-3. Plugin checks:
-
-   * Default timeout
-   * User role rules
-   * Product category rules
-4. Shortest valid timeout is applied
-5. If excluded items exist → skip clearing
-6. Cart is cleared after timeout
-
----
-
-## == Supported Import Formats ==
-
-CSV headers:
-
-`type,key,timeout_minutes`
-
-### Supported types:
-
-* role
-* category
-* excluded_product
-* excluded_category
-
-### Example:
+Example rows:
 
 `customer_type,guest,20`
 `role,customer,30`
 `product_rule,321,10`
-`tag,flash-sale,15`
+`category,flash-sale,15`
+`tag,seasonal,25`
 `excluded_role,wholesale_customer,`
 `excluded_product,123,`
 `excluded_category,high-ticket,`
-`excluded_tag,seasonal,`
+`excluded_tag,fragile,`
 
----
+== Frequently Asked Questions ==
 
-## == Frequently Asked Questions ==
-
-### Does this work for guest users and logged-in users?
+=== Does this work for guest users and logged-in users? ===
 
 Yes. CartFlush uses WooCommerce sessions, so both are supported.
 
----
+=== How is the timeout calculated? ===
 
-### How is the timeout calculated?
+The plugin starts with the default timeout, then checks matching customer type, role, product, category, and tag rules. The shortest valid timeout is applied.
 
-The plugin starts with the default timeout, then checks role and category rules. The shortest valid timeout is applied.
+=== What if a cart contains excluded items? ===
 
----
+CartFlush skips clearing the cart entirely.
 
-### What if a cart contains excluded items?
+=== Can I manage rules without importing CSV? ===
 
-CartFlush will skip clearing the cart entirely.
+Yes. Rules can be added and edited directly from the CartFlush settings page.
 
----
-
-### Can I migrate settings between sites?
+=== Can I migrate settings between sites? ===
 
 Yes. Export settings as JSON and import them on another site.
 
----
-
-### Does uninstall remove all data?
+=== Does uninstall remove all data? ===
 
 Yes. All plugin options are deleted during uninstall.
 
----
+== Screenshots ==
 
-## == Screenshots ==
+1. Modern CartFlush settings page under WooCommerce
+2. Manual rule builder for timeout rules and exclusions
+3. CSV and JSON import/export tools
+4. Saved configuration overview
 
-1. Clean and modern CartFlush settings panel
-2. Manual rule builder for roles, categories, and exclusions
-3. JSON export/import tools
-4. Active rules and exclusions overview
+== Changelog ==
 
----
+= 2.1.0 =
 
-## == Changelog ==
+* Added a full visual rule builder to the settings page
+* Moved the plugin page under the WooCommerce admin menu
+* Added customer type, product, and tag timeout rules
+* Added excluded role and excluded tag support
+* Expanded CSV import to support all new rule types
+* Redesigned the admin settings interface with a more modern layout
+* Improved import/export presentation and rule card usability
 
 = 2.0.0 =
 
