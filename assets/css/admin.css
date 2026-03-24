@@ -255,6 +255,22 @@
 	text-transform: uppercase;
 }
 
+.cartflush-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 14px;
+	border: 1px solid var(--cf-border);
+	border-radius: 14px;
+	background: var(--cf-surface-soft);
+	color: var(--cf-title);
+	font-weight: 600;
+}
+
+.cartflush-toggle input[type="checkbox"] {
+	margin: 0;
+}
+
 .cartflush-rule-grid,
 .cartflush-summary {
 	display: grid;
@@ -505,6 +521,12 @@
 	margin-top: 12px;
 }
 
+.cartflush-tool-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
 .cartflush-upload-field {
 	display: grid;
 	gap: 8px;
@@ -603,6 +625,10 @@
 	.cartflush-sidecard .button {
 		width: 100%;
 		justify-content: center;
+	}
+
+	.cartflush-tool-actions {
+		flex-direction: column;
 	}
 
 	.cartflush-rule-table__action,
