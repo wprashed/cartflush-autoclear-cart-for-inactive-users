@@ -3,7 +3,7 @@
  * Plugin Name: CartFlush AutoClear Cart for Inactive Users
  * Plugin URI: https://wordpress.org/plugins/cartflush-autoclear-cart-for-inactive-users/
  * Description: Automatically clears WooCommerce carts after inactivity with configurable default timeouts, import/export tools, and rule-based exclusions.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Rashed Hossain
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CARTFLUSH_VERSION', '2.1.0' );
+define( 'CARTFLUSH_VERSION', '2.2.0' );
 define( 'CARTFLUSH_FILE', __FILE__ );
 define( 'CARTFLUSH_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CARTFLUSH_URL', plugin_dir_url( __FILE__ ) );
