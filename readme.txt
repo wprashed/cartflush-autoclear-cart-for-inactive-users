@@ -28,6 +28,7 @@ Whether you want faster cart turnover, better session management, or cleaner aba
 * Prevent stale and abandoned carts from piling up
 * Improve WooCommerce session performance
 * Apply smarter rules based on customers and products
+* Protect higher-value carts with subtotal-based timeout rules
 * Manage rules visually from the WooCommerce settings page
 * Import or export rules for fast setup and migration
 
@@ -68,6 +69,26 @@ Apply specific timeout values based on:
 
 This makes it easy to create shorter or longer expiration windows for special items, campaigns, or collections.
 
+=== Cart Value Rules ===
+
+Create timeout rules based on cart subtotal ranges.
+
+Examples:
+
+* 0-49.99 - 20 minutes
+* 50-199.99 - 45 minutes
+* 200+ - 120 minutes
+
+This is especially useful for giving high-value carts more time before they are cleared.
+
+=== Per-Product Timeout Override ===
+
+Add a CartFlush timeout directly on the WooCommerce product edit screen for products that need a custom timeout without relying on a global rule.
+
+=== Pre-Clear Warning Notice ===
+
+Optionally show a notice on the cart and checkout pages shortly before CartFlush clears the cart due to inactivity.
+
 === Smart Timeout Logic ===
 
 When multiple timeout rules apply, CartFlush automatically uses the shortest valid timeout.
@@ -89,6 +110,7 @@ Supported CSV types:
 
 * customer_type
 * role
+* cart_value
 * product_rule
 * category
 * tag
@@ -96,6 +118,8 @@ Supported CSV types:
 * excluded_product
 * excluded_category
 * excluded_tag
+
+CartFlush also includes a downloadable sample CSV from the settings page to help merchants get started faster.
 
 === JSON Import and Export ===
 
@@ -137,6 +161,7 @@ Supported types:
 * customer_type
 * role
 * product_rule
+* cart_value
 * category
 * tag
 * excluded_role
@@ -148,6 +173,7 @@ Example rows:
 
 `customer_type,guest,20`
 `role,customer,30`
+`cart_value,100+,90`
 `product_rule,321,10`
 `category,flash-sale,15`
 `tag,seasonal,25`
@@ -200,6 +226,11 @@ Yes. All plugin options are deleted during uninstall.
 * Expanded CSV import to support all new rule types
 * Redesigned the admin settings interface with a more modern layout
 * Improved import/export presentation and rule card usability
+* Added cart value timeout rules
+* Added product-level timeout overrides in the product editor
+* Added optional pre-clear cart warning notices
+* Added downloadable sample CSV templates
+* Added duplicate rule detection warnings in admin
 
 = 2.0.0 =
 
