@@ -5,7 +5,7 @@ Tags: woocommerce cart cleanup, abandoned cart, cart timeout, woocommerce optimi
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -217,6 +217,14 @@ Yes. All plugin options are deleted during uninstall.
 
 == Changelog ==
 
+= 2.2.0 =
+
+* Added cart value timeout rules
+* Added product-level timeout overrides in the product editor
+* Added optional pre-clear cart warning notices
+* Expanded CSV import with cart value ranges and added downloadable sample CSV templates
+* Added duplicate rule detection warnings in admin
+
 = 2.1.0 =
 
 * Added a full visual rule builder to the settings page
@@ -226,11 +234,6 @@ Yes. All plugin options are deleted during uninstall.
 * Expanded CSV import to support all new rule types
 * Redesigned the admin settings interface with a more modern layout
 * Improved import/export presentation and rule card usability
-* Added cart value timeout rules
-* Added product-level timeout overrides in the product editor
-* Added optional pre-clear cart warning notices
-* Added downloadable sample CSV templates
-* Added duplicate rule detection warnings in admin
 
 = 2.0.0 =
 
