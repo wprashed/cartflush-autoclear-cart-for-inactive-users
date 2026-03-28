@@ -5,7 +5,7 @@ Tags: woocommerce cart cleanup, abandoned cart, cart timeout, woocommerce optimi
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -107,6 +107,10 @@ Export the full CartFlush configuration as JSON for backup or migration, then im
 
 The CartFlush settings page is available directly under the WooCommerce admin menu for quicker access.
 
+=== Duplicate Rule Warnings ===
+
+CartFlush warns admins when duplicate rules are saved so they can clean up overlapping entries more easily.
+
 === Lightweight and Efficient ===
 
 CartFlush focuses only on inactivity tracking, rule evaluation, and cart clearing without adding unnecessary overhead.
@@ -187,18 +191,24 @@ Yes. All plugin options are deleted during uninstall.
 == Screenshots ==
 
 1. Modern CartFlush settings page under WooCommerce
-2. Manual rule builder for timeout rules, CSV and JSON import/export tools 
-3. Exclusion Rules
+2. Manual rule builder for timeout rules and exclusions
+3. CSV and JSON import/export tools
 4. Saved configuration overview
 
 == Changelog ==
 
+= 2.3.0 =
+
+* Refined the free version feature set around core timeout and exclusion rules
+* Improved the WooCommerce settings experience and release documentation
+* Preserved the manual rule builder plus basic CSV and JSON migration tools
+
 = 2.2.0 =
 
-* Kept the free version focused on core timeout and exclusion rules
-* Improved the manual settings UI under the WooCommerce menu
-* Preserved basic CSV and JSON import/export tools for store setup and migration
-* Added downloadable sample CSV templates
+* Added cart value timeout rules for subtotal-based cart expiration
+* Added product-level timeout overrides in the product editor
+* Added optional pre-clear warning notices for expiring carts
+* Expanded CSV import with cart value ranges and downloadable sample templates
 * Added duplicate rule detection warnings in admin
 
 = 2.1.0 =
