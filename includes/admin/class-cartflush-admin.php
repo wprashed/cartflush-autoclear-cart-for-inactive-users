@@ -37,13 +37,9 @@ class CartFlush_Admin {
 
 	public function register_settings() {
 		register_setting( 'cartflush_settings_group', 'cartflush_expiration_time', [ 'type' => 'integer', 'sanitize_callback' => 'absint', 'default' => 30 ] );
-		register_setting( 'cartflush_settings_group', 'cartflush_enable_warning_notice', [ 'type' => 'string', 'sanitize_callback' => [ $this, 'sanitize_yes_no_option' ], 'default' => 'no' ] );
-		register_setting( 'cartflush_settings_group', 'cartflush_warning_notice_minutes', [ 'type' => 'integer', 'sanitize_callback' => 'absint', 'default' => 5 ] );
 		register_setting( 'cartflush_settings_group', CartFlush_Rules::OPTION_NAME, [ 'type' => 'array', 'sanitize_callback' => [ $this, 'sanitize_rules_option' ], 'default' => $this->rules->get_default_rules() ] );
 		add_settings_section( 'cartflush_main', __( 'Timeout Settings', 'cartflush' ), [ $this, 'render_main_section' ], 'cartflush-settings' );
 		add_settings_field( 'cartflush_expiration_time', __( 'Default cart expiration', 'cartflush' ), [ $this, 'render_expiration_field' ], 'cartflush-settings', 'cartflush_main' );
-		add_settings_field( 'cartflush_enable_warning_notice', __( 'Expiry warning notice', 'cartflush' ), [ $this, 'render_warning_toggle_field' ], 'cartflush-settings', 'cartflush_main' );
-		add_settings_field( 'cartflush_warning_notice_minutes', __( 'Warning threshold', 'cartflush' ), [ $this, 'render_warning_minutes_field' ], 'cartflush-settings', 'cartflush_main' );
 	}
 
 	public function sanitize_rules_option( $value ) {
@@ -72,24 +68,6 @@ class CartFlush_Admin {
 		$value = (int) get_option( 'cartflush_expiration_time', 30 );
 		echo '<label class="cartflush-field"><input type="number" min="1" step="1" class="small-text" name="cartflush_expiration_time" value="' . esc_attr( $value ) . '"> <span>' . esc_html__( 'minutes', 'cartflush' ) . '</span></label>';
 		echo '<p class="description">' . esc_html__( 'Fallback timeout when no custom timeout rule matches.', 'cartflush' ) . '</p>';
-	}
-
-	public function render_warning_toggle_field() {
-		$value = get_option( 'cartflush_enable_warning_notice', 'no' );
-		?>
-		<label class="cartflush-toggle">
-			<input type="hidden" name="cartflush_enable_warning_notice" value="no">
-			<input type="checkbox" name="cartflush_enable_warning_notice" value="yes" <?php checked( $value, 'yes' ); ?>>
-			<span><?php esc_html_e( 'Show a shopper notice before CartFlush clears the cart.', 'cartflush' ); ?></span>
-		</label>
-		<p class="description"><?php esc_html_e( 'The warning appears on the cart and checkout pages shortly before the timeout is reached.', 'cartflush' ); ?></p>
-		<?php
-	}
-
-	public function render_warning_minutes_field() {
-		$value = (int) get_option( 'cartflush_warning_notice_minutes', 5 );
-		echo '<label class="cartflush-field"><input type="number" min="1" step="1" class="small-text" name="cartflush_warning_notice_minutes" value="' . esc_attr( $value ) . '"> <span>' . esc_html__( 'minutes before expiry', 'cartflush' ) . '</span></label>';
-		echo '<p class="description">' . esc_html__( 'Choose how soon before expiry the shopper warning notice appears.', 'cartflush' ) . '</p>';
 	}
 
 	public function render_admin_notices() {
@@ -129,11 +107,7 @@ class CartFlush_Admin {
 		}
 		$default_timeout = isset( $data['cartflush_expiration_time'] ) ? absint( $data['cartflush_expiration_time'] ) : get_option( 'cartflush_expiration_time', 30 );
 		$rules           = isset( $data['import_rules'] ) ? $data['import_rules'] : $data;
-		$warning_enabled = isset( $data['cartflush_enable_warning_notice'] ) ? $this->sanitize_yes_no_option( $data['cartflush_enable_warning_notice'] ) : get_option( 'cartflush_enable_warning_notice', 'no' );
-		$warning_minutes = isset( $data['cartflush_warning_notice_minutes'] ) ? absint( $data['cartflush_warning_notice_minutes'] ) : get_option( 'cartflush_warning_notice_minutes', 5 );
 		update_option( 'cartflush_expiration_time', max( 1, $default_timeout ) );
-		update_option( 'cartflush_enable_warning_notice', $warning_enabled );
-		update_option( 'cartflush_warning_notice_minutes', max( 1, $warning_minutes ) );
 		update_option( CartFlush_Rules::OPTION_NAME, $this->rules->normalize_rules_data( $rules ) );
 		$this->redirect_with_message( __( 'JSON settings imported successfully.', 'cartflush' ) );
 	}
@@ -175,16 +149,6 @@ class CartFlush_Admin {
 				case 'role':
 					if ( $timeout > 0 ) {
 						$rules['role_rules'][ sanitize_key( $key ) ] = $timeout;
-					}
-					break;
-				case 'cart_value':
-					$range = $this->parse_cart_value_key( $key );
-					if ( $range && $timeout > 0 ) {
-						$rules['cart_value_rules'][] = [
-							'minimum' => $range['minimum'],
-							'maximum' => $range['maximum'],
-							'timeout' => $timeout,
-						];
 					}
 					break;
 				case 'product_rule':
@@ -240,7 +204,6 @@ class CartFlush_Admin {
 		fputcsv( $handle, [ 'type', 'key', 'timeout_minutes' ] );
 		fputcsv( $handle, [ 'customer_type', 'guest', '20' ] );
 		fputcsv( $handle, [ 'role', 'customer', '30' ] );
-		fputcsv( $handle, [ 'cart_value', '100+', '90' ] );
 		fputcsv( $handle, [ 'product_rule', '321', '10' ] );
 		fputcsv( $handle, [ 'category', 'flash-sale', '15' ] );
 		fputcsv( $handle, [ 'tag', 'seasonal', '25' ] );
@@ -255,7 +218,7 @@ class CartFlush_Admin {
 	public function handle_json_export() {
 		$this->assert_admin_permissions();
 		check_admin_referer( 'cartflush_export_json' );
-		$payload = [ 'plugin' => 'CartFlush', 'version' => CARTFLUSH_VERSION, 'exported_at' => gmdate( 'c' ), 'cartflush_expiration_time' => (int) get_option( 'cartflush_expiration_time', 30 ), 'cartflush_enable_warning_notice' => get_option( 'cartflush_enable_warning_notice', 'no' ), 'cartflush_warning_notice_minutes' => (int) get_option( 'cartflush_warning_notice_minutes', 5 ), 'import_rules' => $this->rules->get_rules_option() ];
+		$payload = [ 'plugin' => 'CartFlush', 'version' => CARTFLUSH_VERSION, 'exported_at' => gmdate( 'c' ), 'cartflush_expiration_time' => (int) get_option( 'cartflush_expiration_time', 30 ), 'import_rules' => $this->rules->get_rules_option() ];
 		nocache_headers();
 		header( 'Content-Type: application/json; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename=cartflush-settings-' . gmdate( 'Y-m-d' ) . '.json' );
@@ -294,7 +257,7 @@ class CartFlush_Admin {
 							<p><?php esc_html_e( 'Use a default timeout, layer rule-based overrides, then add exclusions for carts that should never be cleared automatically.', 'cartflush' ); ?></p>
 							<ul class="cartflush-bullet-list">
 								<li><?php esc_html_e( 'Customer type and role timeouts', 'cartflush' ); ?></li>
-								<li><?php esc_html_e( 'Cart value, product, category, and tag rules', 'cartflush' ); ?></li>
+								<li><?php esc_html_e( 'Product, category, and tag rules', 'cartflush' ); ?></li>
 								<li><?php esc_html_e( 'Role, product, category, and tag exclusions', 'cartflush' ); ?></li>
 							</ul>
 						</div>
@@ -327,7 +290,6 @@ class CartFlush_Admin {
 									<?php
 									$this->render_rule_card( __( 'Customer Type Rules', 'cartflush' ), __( 'Set separate timeouts for guest and logged-in customers.', 'cartflush' ), 'customer-type', __( 'Add Rule', 'cartflush' ), [ __( 'Customer Type', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['customer_type_rules'] ), __( 'Use this when guest carts and account carts should expire differently.', 'cartflush' ), function() use ( $rules, $customer_types ) { $this->render_customer_type_rows( $rules['customer_type_rules'], $customer_types ); } );
 									$this->render_rule_card( __( 'Role Rules', 'cartflush' ), __( 'Override the default timeout for specific user roles.', 'cartflush' ), 'role-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Role', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['role_rules'] ), __( 'Perfect for wholesale, shop manager, or VIP-specific behavior.', 'cartflush' ), function() use ( $rules, $roles ) { $this->render_map_timeout_rows( 'role_rules', 'role', $rules['role_rules'], $roles, __( 'Select a role', 'cartflush' ) ); } );
-									$this->render_rule_card( __( 'Cart Value Rules', 'cartflush' ), __( 'Match carts by subtotal range to give larger or smaller orders more time.', 'cartflush' ), 'cart-value-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Min Value', 'cartflush' ), __( 'Max Value', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['cart_value_rules'] ), __( 'Leave the maximum value empty to create an open-ended range like 100+.', 'cartflush' ), function() use ( $rules ) { $this->render_cart_value_rows( 'cart_value_rules', $rules['cart_value_rules'] ); } );
 									$this->render_rule_card( __( 'Product Rules', 'cartflush' ), __( 'Set a timeout for a single WooCommerce product ID.', 'cartflush' ), 'product-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Product ID', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['product_rules'] ), __( 'Use product-level rules when one item needs a special cart lifetime.', 'cartflush' ), function() use ( $rules ) { $this->render_product_timeout_rows( 'product_rules', $rules['product_rules'] ); } );
 									$this->render_rule_card( __( 'Category Rules', 'cartflush' ), __( 'Apply timeouts using WooCommerce product categories.', 'cartflush' ), 'category-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Category', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['category_rules'] ), __( 'Great for grouping timeouts across collections instead of product by product.', 'cartflush' ), function() use ( $rules, $categories ) { $this->render_map_timeout_rows( 'category_rules', 'slug', $rules['category_rules'], $categories, __( 'Select a category', 'cartflush' ) ); } );
 									$this->render_rule_card( __( 'Tag Rules', 'cartflush' ), __( 'Apply timeouts using WooCommerce product tags.', 'cartflush' ), 'tag-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Tag', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['tag_rules'] ), __( 'Helpful for campaign, seasonal, or merchandising tag-based rules.', 'cartflush' ), function() use ( $rules, $tags ) { $this->render_map_timeout_rows( 'tag_rules', 'slug', $rules['tag_rules'], $tags, __( 'Select a tag', 'cartflush' ) ); } );
@@ -376,11 +338,10 @@ class CartFlush_Admin {
 										<span class="cartflush-chip"><?php esc_html_e( 'CSV Import', 'cartflush' ); ?></span>
 										<strong><?php esc_html_e( 'Bulk Rules', 'cartflush' ); ?></strong>
 									</div>
-								<p><?php esc_html_e( 'Upload a CSV using the headers type, key, timeout_minutes. Exclusion rows can keep timeout_minutes empty, and cart value ranges can use formats like 100+ or 50-200.', 'cartflush' ); ?></p>
+								<p><?php esc_html_e( 'Upload a CSV using the headers type, key, timeout_minutes. Exclusion rows can keep timeout_minutes empty.', 'cartflush' ); ?></p>
 								<div class="cartflush-code-list">
 									<code>customer_type</code>
 									<code>role</code>
-									<code>cart_value</code>
 									<code>product_rule</code>
 									<code>category</code>
 									<code>tag</code>
@@ -481,7 +442,6 @@ class CartFlush_Admin {
 		?>
 		<script type="text/html" id="tmpl-cartflush-customer-type"><tr><td><?php $this->render_select_field( 'cartflush_import_rules[customer_type_rules][{{index}}][type]', '', $customer_types, __( 'Select customer type', 'cartflush' ) ); ?></td><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[customer_type_rules][{{index}}][timeout]" value=""></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr></script>
 		<script type="text/html" id="tmpl-cartflush-role-rule"><tr><td><?php $this->render_select_field( 'cartflush_import_rules[role_rules][{{index}}][role]', '', $roles, __( 'Select a role', 'cartflush' ) ); ?></td><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[role_rules][{{index}}][timeout]" value=""></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr></script>
-		<script type="text/html" id="tmpl-cartflush-cart-value-rule"><tr><td><input type="number" min="0" step="0.01" class="small-text" name="cartflush_import_rules[cart_value_rules][{{index}}][minimum]" value=""></td><td><input type="number" min="0" step="0.01" class="small-text" name="cartflush_import_rules[cart_value_rules][{{index}}][maximum]" value=""></td><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[cart_value_rules][{{index}}][timeout]" value=""></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr></script>
 		<script type="text/html" id="tmpl-cartflush-product-rule"><tr><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[product_rules][{{index}}][product_id]" value=""></td><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[product_rules][{{index}}][timeout]" value=""></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr></script>
 		<script type="text/html" id="tmpl-cartflush-category-rule"><tr><td><?php $this->render_select_field( 'cartflush_import_rules[category_rules][{{index}}][slug]', '', $categories, __( 'Select a category', 'cartflush' ) ); ?></td><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[category_rules][{{index}}][timeout]" value=""></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr></script>
 		<script type="text/html" id="tmpl-cartflush-tag-rule"><tr><td><?php $this->render_select_field( 'cartflush_import_rules[tag_rules][{{index}}][slug]', '', $tags, __( 'Select a tag', 'cartflush' ) ); ?></td><td><input type="number" min="1" step="1" class="small-text" name="cartflush_import_rules[tag_rules][{{index}}][timeout]" value=""></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr></script>
@@ -507,16 +467,6 @@ class CartFlush_Admin {
 		$index = 0; foreach ( $items as $key => $timeout ) { echo $this->get_number_timeout_row( $group, $index, $key, $timeout ); ++$index; } // phpcs:ignore
 	}
 
-	private function render_cart_value_rows( $group, $items ) {
-		if ( empty( $items ) ) { echo $this->get_cart_value_row( $group, 0, '', '', '' ); return; } // phpcs:ignore
-		foreach ( array_values( $items ) as $index => $item ) {
-			$minimum = isset( $item['minimum'] ) ? $item['minimum'] : '';
-			$maximum = isset( $item['maximum'] ) ? $item['maximum'] : '';
-			$timeout = isset( $item['timeout'] ) ? $item['timeout'] : '';
-			echo $this->get_cart_value_row( $group, $index, $minimum, $maximum, $timeout ); // phpcs:ignore
-		}
-	}
-
 	private function render_simple_select_rows( $group, $field, $items, $options, $placeholder ) {
 		if ( empty( $items ) ) { echo $this->get_simple_select_row( $group, 0, $field, '', $options, $placeholder ); return; } // phpcs:ignore
 		foreach ( array_values( $items ) as $index => $item ) { echo $this->get_simple_select_row( $group, $index, $field, $item, $options, $placeholder ); } // phpcs:ignore
@@ -533,10 +483,6 @@ class CartFlush_Admin {
 
 	private function get_number_timeout_row( $group, $index, $value, $timeout ) {
 		ob_start(); ?><tr><td><input type="number" min="1" step="1" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[' . $group . '][' . $index . '][product_id]' ); ?>" value="<?php echo esc_attr( $value ); ?>"></td><td><input type="number" min="1" step="1" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[' . $group . '][' . $index . '][timeout]' ); ?>" value="<?php echo esc_attr( $timeout ); ?>"></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr><?php return (string) ob_get_clean();
-	}
-
-	private function get_cart_value_row( $group, $index, $minimum, $maximum, $timeout ) {
-		ob_start(); ?><tr><td><input type="number" min="0" step="0.01" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[' . $group . '][' . $index . '][minimum]' ); ?>" value="<?php echo esc_attr( $minimum ); ?>"></td><td><input type="number" min="0" step="0.01" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[' . $group . '][' . $index . '][maximum]' ); ?>" value="<?php echo esc_attr( $maximum ); ?>"></td><td><input type="number" min="1" step="1" class="small-text" name="<?php echo esc_attr( 'cartflush_import_rules[' . $group . '][' . $index . '][timeout]' ); ?>" value="<?php echo esc_attr( $timeout ); ?>"></td><td class="cartflush-row-action"><?php $this->render_remove_button(); ?></td></tr><?php return (string) ob_get_clean();
 	}
 
 	private function get_simple_select_row( $group, $index, $field, $value, $options, $placeholder ) {
@@ -561,7 +507,6 @@ class CartFlush_Admin {
 		return [
 			'customer_type_rules' => $this->prepare_timeout_rows( isset( $value['customer_type_rules'] ) ? $value['customer_type_rules'] : [], 'type', 'sanitize_key' ),
 			'role_rules'          => $this->prepare_timeout_rows( isset( $value['role_rules'] ) ? $value['role_rules'] : [], 'role', 'sanitize_key' ),
-			'cart_value_rules'    => $this->prepare_cart_value_rows( isset( $value['cart_value_rules'] ) ? $value['cart_value_rules'] : [] ),
 			'product_rules'       => $this->prepare_integer_timeout_rows( isset( $value['product_rules'] ) ? $value['product_rules'] : [], 'product_id' ),
 			'category_rules'      => $this->prepare_timeout_rows( isset( $value['category_rules'] ) ? $value['category_rules'] : [], 'slug', 'sanitize_title' ),
 			'tag_rules'           => $this->prepare_timeout_rows( isset( $value['tag_rules'] ) ? $value['tag_rules'] : [], 'slug', 'sanitize_title' ),
@@ -580,10 +525,6 @@ class CartFlush_Admin {
 		$prepared = []; if ( ! is_array( $rows ) ) { return $prepared; } foreach ( $rows as $row ) { if ( ! is_array( $row ) ) { continue; } $key = isset( $row[ $field ] ) ? absint( $row[ $field ] ) : 0; $timeout = isset( $row['timeout'] ) ? absint( $row['timeout'] ) : 0; if ( $key > 0 && $timeout > 0 ) { $prepared[ $key ] = $timeout; } } return $prepared;
 	}
 
-	private function prepare_cart_value_rows( $rows ) {
-		$prepared = []; if ( ! is_array( $rows ) ) { return $prepared; } foreach ( $rows as $row ) { if ( ! is_array( $row ) ) { continue; } $minimum = isset( $row['minimum'] ) ? (float) wc_format_decimal( $row['minimum'] ) : 0; $maximum = isset( $row['maximum'] ) && '' !== (string) $row['maximum'] ? (float) wc_format_decimal( $row['maximum'] ) : 0; $timeout = isset( $row['timeout'] ) ? absint( $row['timeout'] ) : 0; if ( $timeout > 0 && $minimum >= 0 && ( 0 === $maximum || $maximum >= $minimum ) ) { $prepared[] = [ 'minimum' => $minimum, 'maximum' => $maximum, 'timeout' => $timeout ]; } } return $prepared;
-	}
-
 	private function prepare_string_list_rows( $rows, $field, $sanitizer ) {
 		$prepared = []; if ( ! is_array( $rows ) ) { return $prepared; } foreach ( $rows as $row ) { $item = is_array( $row ) && isset( $row[ $field ] ) ? call_user_func( $sanitizer, $row[ $field ] ) : ''; if ( $item ) { $prepared[] = $item; } } return array_values( array_unique( $prepared ) );
 	}
@@ -595,7 +536,7 @@ class CartFlush_Admin {
 	private function get_stats( $rules ) {
 		return [
 			[ 'label' => __( 'Default Timeout', 'cartflush' ), 'value' => (int) get_option( 'cartflush_expiration_time', 30 ), 'meta' => __( 'minutes', 'cartflush' ) ],
-			[ 'label' => __( 'Timeout Rules', 'cartflush' ), 'value' => count( $rules['customer_type_rules'] ) + count( $rules['role_rules'] ) + count( $rules['cart_value_rules'] ) + count( $rules['product_rules'] ) + count( $rules['category_rules'] ) + count( $rules['tag_rules'] ), 'meta' => __( 'active', 'cartflush' ) ],
+			[ 'label' => __( 'Timeout Rules', 'cartflush' ), 'value' => count( $rules['customer_type_rules'] ) + count( $rules['role_rules'] ) + count( $rules['product_rules'] ) + count( $rules['category_rules'] ) + count( $rules['tag_rules'] ), 'meta' => __( 'active', 'cartflush' ) ],
 			[ 'label' => __( 'Exclusions', 'cartflush' ), 'value' => count( $rules['excluded_roles'] ) + count( $rules['excluded_products'] ) + count( $rules['excluded_categories'] ) + count( $rules['excluded_tags'] ), 'meta' => __( 'guards', 'cartflush' ) ],
 			[ 'label' => __( 'Import Modes', 'cartflush' ), 'value' => 'CSV + JSON', 'meta' => __( 'plus sample', 'cartflush' ) ],
 		];
@@ -605,7 +546,6 @@ class CartFlush_Admin {
 		return [
 			[ 'label' => __( 'Customer Type Rules', 'cartflush' ), 'value' => $this->format_assoc_list( $rules['customer_type_rules'] ) ],
 			[ 'label' => __( 'Role Rules', 'cartflush' ), 'value' => $this->format_assoc_list( $rules['role_rules'] ) ],
-			[ 'label' => __( 'Cart Value Rules', 'cartflush' ), 'value' => $this->format_cart_value_list( $rules['cart_value_rules'] ) ],
 			[ 'label' => __( 'Product Rules', 'cartflush' ), 'value' => $this->format_assoc_list( $rules['product_rules'] ) ],
 			[ 'label' => __( 'Category Rules', 'cartflush' ), 'value' => $this->format_assoc_list( $rules['category_rules'] ) ],
 			[ 'label' => __( 'Tag Rules', 'cartflush' ), 'value' => $this->format_assoc_list( $rules['tag_rules'] ) ],
@@ -630,25 +570,8 @@ class CartFlush_Admin {
 		$formatted = []; foreach ( $items as $key => $value ) { $formatted[] = sprintf( __( '%1$s: %2$d min', 'cartflush' ), (string) $key, absint( $value ) ); } return implode( ', ', $formatted );
 	}
 
-	private function format_cart_value_list( $items ) {
-		if ( empty( $items ) ) { return __( 'None saved yet.', 'cartflush' ); }
-		$formatted = [];
-		foreach ( $items as $item ) {
-			$minimum = isset( $item['minimum'] ) ? (float) $item['minimum'] : 0;
-			$maximum = isset( $item['maximum'] ) ? (float) $item['maximum'] : 0;
-			$timeout = isset( $item['timeout'] ) ? absint( $item['timeout'] ) : 0;
-			$range   = $maximum > 0 ? $minimum . '-' . $maximum : $minimum . '+';
-			$formatted[] = sprintf( __( '%1$s: %2$d min', 'cartflush' ), $range, $timeout );
-		}
-		return implode( ', ', $formatted );
-	}
-
 	private function format_simple_list( $items ) {
 		return empty( $items ) ? __( 'None saved yet.', 'cartflush' ) : implode( ', ', array_map( 'strval', $items ) );
-	}
-
-	private function sanitize_yes_no_option( $value ) {
-		return 'yes' === $value ? 'yes' : 'no';
 	}
 
 	private function store_duplicate_rule_warnings( $value ) {
@@ -656,7 +579,6 @@ class CartFlush_Admin {
 
 		$this->collect_duplicate_timeout_warnings( $warnings, isset( $value['customer_type_rules'] ) ? $value['customer_type_rules'] : [], 'type', __( 'Customer type rules', 'cartflush' ) );
 		$this->collect_duplicate_timeout_warnings( $warnings, isset( $value['role_rules'] ) ? $value['role_rules'] : [], 'role', __( 'Role rules', 'cartflush' ) );
-		$this->collect_duplicate_cart_value_warnings( $warnings, isset( $value['cart_value_rules'] ) ? $value['cart_value_rules'] : [] );
 		$this->collect_duplicate_timeout_warnings( $warnings, isset( $value['product_rules'] ) ? $value['product_rules'] : [], 'product_id', __( 'Product rules', 'cartflush' ) );
 		$this->collect_duplicate_timeout_warnings( $warnings, isset( $value['category_rules'] ) ? $value['category_rules'] : [], 'slug', __( 'Category rules', 'cartflush' ) );
 		$this->collect_duplicate_timeout_warnings( $warnings, isset( $value['tag_rules'] ) ? $value['tag_rules'] : [], 'slug', __( 'Tag rules', 'cartflush' ) );
@@ -697,55 +619,6 @@ class CartFlush_Admin {
 
 	private function collect_duplicate_simple_warnings( &$warnings, $rows, $field, $label ) {
 		$this->collect_duplicate_timeout_warnings( $warnings, $rows, $field, $label );
-	}
-
-	private function collect_duplicate_cart_value_warnings( &$warnings, $rows ) {
-		if ( ! is_array( $rows ) ) {
-			return;
-		}
-
-		$seen = [];
-
-		foreach ( $rows as $row ) {
-			if ( ! is_array( $row ) || ! isset( $row['minimum'] ) ) {
-				continue;
-			}
-
-			$key = (string) $row['minimum'] . '|' . ( isset( $row['maximum'] ) ? (string) $row['maximum'] : '' );
-
-			if ( isset( $seen[ $key ] ) ) {
-				$warnings[] = sprintf( __( 'Cart value rules contains a duplicate range for %s.', 'cartflush' ), str_replace( '|', ' - ', $key ) );
-			}
-
-			$seen[ $key ] = true;
-		}
-	}
-
-	private function parse_cart_value_key( $key ) {
-		$key = trim( (string) $key );
-
-		if ( preg_match( '/^([0-9]+(?:\.[0-9]+)?)\+$/', $key, $matches ) ) {
-			return [
-				'minimum' => (float) $matches[1],
-				'maximum' => 0,
-			];
-		}
-
-		if ( preg_match( '/^([0-9]+(?:\.[0-9]+)?)\-([0-9]+(?:\.[0-9]+)?)$/', $key, $matches ) ) {
-			$minimum = (float) $matches[1];
-			$maximum = (float) $matches[2];
-
-			if ( $maximum < $minimum ) {
-				return false;
-			}
-
-			return [
-				'minimum' => $minimum,
-				'maximum' => $maximum,
-			];
-		}
-
-		return false;
 	}
 
 	private function assert_admin_permissions() {
