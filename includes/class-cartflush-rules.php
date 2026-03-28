@@ -12,7 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class CartFlush_Rules {
 
 	const OPTION_NAME = 'cartflush_import_rules';
-	const PRODUCT_TIMEOUT_META_KEY = '_cartflush_timeout_override';
 
 	/**
 	 * Get the normalized saved rules.
@@ -37,7 +36,6 @@ class CartFlush_Rules {
 		return [
 			'customer_type_rules' => $this->normalize_customer_type_rules( $rules['customer_type_rules'] ),
 			'role_rules'          => $this->normalize_timeout_map( $rules['role_rules'], 'sanitize_key' ),
-			'cart_value_rules'    => $this->normalize_cart_value_rules( $rules['cart_value_rules'] ),
 			'category_rules'      => $this->normalize_timeout_map( $rules['category_rules'], 'sanitize_title' ),
 			'tag_rules'           => $this->normalize_timeout_map( $rules['tag_rules'], 'sanitize_title' ),
 			'product_rules'       => $this->normalize_product_timeout_rules( $rules['product_rules'] ),
@@ -63,7 +61,6 @@ class CartFlush_Rules {
 		$user       = wp_get_current_user();
 		$cart_items = WC()->cart->get_cart();
 		$is_guest   = ! ( $user instanceof WP_User ) || 0 === (int) $user->ID;
-		$cart_total = $this->get_cart_subtotal();
 
 		if ( $is_guest && isset( $rules['customer_type_rules']['guest'] ) ) {
 			$timeouts[] = (int) $rules['customer_type_rules']['guest'];
@@ -83,33 +80,11 @@ class CartFlush_Rules {
 			}
 		}
 
-		foreach ( $rules['cart_value_rules'] as $rule ) {
-			$minimum = isset( $rule['minimum'] ) ? (float) $rule['minimum'] : 0;
-			$maximum = isset( $rule['maximum'] ) ? (float) $rule['maximum'] : 0;
-			$timeout = isset( $rule['timeout'] ) ? absint( $rule['timeout'] ) : 0;
-
-			if ( $timeout <= 0 || $cart_total < $minimum ) {
-				continue;
-			}
-
-			if ( $maximum > 0 && $cart_total > $maximum ) {
-				continue;
-			}
-
-			$timeouts[] = $timeout;
-		}
-
 		foreach ( $cart_items as $cart_item ) {
 			$product_id = isset( $cart_item['product_id'] ) ? absint( $cart_item['product_id'] ) : 0;
 
 			if ( ! $product_id ) {
 				continue;
-			}
-
-			$product_timeout = $this->get_product_timeout_override( $product_id );
-
-			if ( $product_timeout > 0 ) {
-				$timeouts[] = $product_timeout;
 			}
 
 			if ( isset( $rules['product_rules'][ $product_id ] ) ) {
@@ -192,7 +167,6 @@ class CartFlush_Rules {
 		return [
 			'customer_type_rules' => [],
 			'role_rules'          => [],
-			'cart_value_rules'    => [],
 			'category_rules'      => [],
 			'tag_rules'           => [],
 			'product_rules'       => [],
@@ -224,49 +198,6 @@ class CartFlush_Rules {
 			if ( in_array( $type, $allowed, true ) && $timeout > 0 ) {
 				$normalized[ $type ] = $timeout;
 			}
-		}
-
-		return $normalized;
-	}
-
-	/**
-	 * Normalize cart value rules.
-	 *
-	 * @param mixed $rules Cart value rules.
-	 * @return array<int, array<string, float|int>>
-	 */
-	private function normalize_cart_value_rules( $rules ) {
-		$normalized = [];
-
-		if ( ! is_array( $rules ) ) {
-			return $normalized;
-		}
-
-		foreach ( $rules as $rule ) {
-			if ( ! is_array( $rule ) ) {
-				continue;
-			}
-
-			$minimum = isset( $rule['minimum'] ) ? wc_format_decimal( $rule['minimum'] ) : 0;
-			$maximum = isset( $rule['maximum'] ) ? wc_format_decimal( $rule['maximum'] ) : 0;
-			$timeout = isset( $rule['timeout'] ) ? absint( $rule['timeout'] ) : 0;
-
-			$minimum = max( 0, (float) $minimum );
-			$maximum = max( 0, (float) $maximum );
-
-			if ( $timeout <= 0 ) {
-				continue;
-			}
-
-			if ( $maximum > 0 && $maximum < $minimum ) {
-				continue;
-			}
-
-			$normalized[] = [
-				'minimum' => $minimum,
-				'maximum' => $maximum,
-				'timeout' => $timeout,
-			];
 		}
 
 		return $normalized;
@@ -401,34 +332,5 @@ class CartFlush_Rules {
 		}
 
 		return array_values( array_unique( array_filter( $slugs ) ) );
-	}
-
-	/**
-	 * Get a product-level timeout override.
-	 *
-	 * @param int $product_id Product ID.
-	 * @return int
-	 */
-	public function get_product_timeout_override( $product_id ) {
-		return absint( get_post_meta( absint( $product_id ), self::PRODUCT_TIMEOUT_META_KEY, true ) );
-	}
-
-	/**
-	 * Resolve the current cart subtotal for value rules.
-	 *
-	 * @return float
-	 */
-	private function get_cart_subtotal() {
-		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
-			return 0;
-		}
-
-		$subtotal = WC()->cart->get_subtotal();
-
-		if ( '' === $subtotal || null === $subtotal ) {
-			return 0;
-		}
-
-		return (float) wc_format_decimal( $subtotal );
 	}
 }
