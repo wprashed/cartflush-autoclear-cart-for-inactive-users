@@ -451,20 +451,7 @@ class CartFlush_Admin {
 						</div>
 					</aside>
 				</div>
-
-				<section class="cartflush-summary-panel">
-					<div class="cartflush-panel__intro">
-						<div>
-							<span class="cartflush-chip"><?php esc_html_e( 'Overview', 'cartflush' ); ?></span>
-							<h2><?php esc_html_e( 'Saved Configuration', 'cartflush' ); ?></h2>
-						</div>
-					</div>
-					<div class="cartflush-summary">
-						<?php foreach ( $this->get_summary_items( $rules ) as $summary ) : ?>
-							<div><h3><?php echo esc_html( $summary['label'] ); ?></h3><p><?php echo esc_html( $summary['value'] ); ?></p></div>
-						<?php endforeach; ?>
-					</div>
-				</section>
+				
 			</div>
 
 		</div>
