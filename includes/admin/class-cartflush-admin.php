@@ -22,6 +22,7 @@ class CartFlush_Admin {
 		$this->rules = $rules;
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_action( 'admin_init', [ $this, 'maybe_sync_settings_to_rules' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'admin_notices', [ $this, 'render_admin_notices' ] );
 		add_action( 'admin_post_cartflush_import_json', [ $this, 'handle_json_import' ] );
@@ -37,7 +38,15 @@ class CartFlush_Admin {
 
 	public function register_settings() {
 		register_setting( 'cartflush_settings_group', 'cartflush_expiration_time', [ 'type' => 'integer', 'sanitize_callback' => 'absint', 'default' => 30 ] );
-		register_setting( 'cartflush_settings_group', CartFlush_Rules::OPTION_NAME, [ 'type' => 'array', 'sanitize_callback' => [ $this, 'sanitize_rules_option' ], 'default' => $this->rules->get_default_rules() ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_customer_type_rules_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_role_rules_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_product_rules_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_category_rules_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_tag_rules_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_excluded_roles_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_excluded_products_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_excluded_categories_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
+		register_setting( 'cartflush_settings_group', 'cartflush_excluded_tags_text', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ] );
 		add_settings_section( 'cartflush_main', __( 'Timeout Settings', 'cartflush' ), [ $this, 'render_main_section' ], 'cartflush-settings' );
 		add_settings_field( 'cartflush_expiration_time', __( 'Default cart expiration', 'cartflush' ), [ $this, 'render_expiration_field' ], 'cartflush-settings', 'cartflush_main' );
 	}
@@ -57,7 +66,6 @@ class CartFlush_Admin {
 		}
 
 		wp_enqueue_style( 'cartflush-admin', CARTFLUSH_URL . 'assets/css/admin.css', [], CARTFLUSH_VERSION );
-		wp_enqueue_script( 'cartflush-admin', CARTFLUSH_URL . 'assets/js/admin.js', [], CARTFLUSH_VERSION, true );
 	}
 
 	public function render_main_section() {
@@ -228,10 +236,6 @@ class CartFlush_Admin {
 
 	public function settings_page_html() {
 		$rules          = $this->rules->get_rules_option();
-		$roles          = $this->get_role_options();
-		$customer_types = [ 'guest' => __( 'Guest', 'cartflush' ), 'logged_in' => __( 'Logged-in', 'cartflush' ) ];
-		$categories     = $this->get_taxonomy_options( 'product_cat' );
-		$tags           = $this->get_taxonomy_options( 'product_tag' );
 		?>
 		<div class="wrap cartflush-admin">
 			<div class="cartflush-shell">
@@ -267,6 +271,7 @@ class CartFlush_Admin {
 				<div class="cartflush-layout">
 					<main class="cartflush-main">
 						<form method="post" action="options.php" class="cartflush-settings-form">
+							<?php settings_fields( 'cartflush_settings_group' ); ?>
 							<section class="cartflush-panel">
 								<div class="cartflush-panel__intro">
 									<div>
@@ -275,7 +280,7 @@ class CartFlush_Admin {
 										<p><?php esc_html_e( 'Choose the fallback timeout used when no more specific rule applies.', 'cartflush' ); ?></p>
 									</div>
 								</div>
-								<?php settings_fields( 'cartflush_settings_group' ); do_settings_sections( 'cartflush-settings' ); ?>
+								<?php $this->render_expiration_field(); ?>
 							</section>
 
 							<section class="cartflush-panel">
@@ -286,13 +291,43 @@ class CartFlush_Admin {
 										<p><?php esc_html_e( 'Apply shorter or longer cart expiration windows based on the customer or the products in the cart.', 'cartflush' ); ?></p>
 									</div>
 								</div>
-								<div class="cartflush-rule-grid">
+								<div class="cartflush-editor-grid">
 									<?php
-									$this->render_rule_card( __( 'Customer Type Rules', 'cartflush' ), __( 'Set separate timeouts for guest and logged-in customers.', 'cartflush' ), 'customer-type', __( 'Add Rule', 'cartflush' ), [ __( 'Customer Type', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['customer_type_rules'] ), __( 'Use this when guest carts and account carts should expire differently.', 'cartflush' ), function() use ( $rules, $customer_types ) { $this->render_customer_type_rows( $rules['customer_type_rules'], $customer_types ); } );
-									$this->render_rule_card( __( 'Role Rules', 'cartflush' ), __( 'Override the default timeout for specific user roles.', 'cartflush' ), 'role-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Role', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['role_rules'] ), __( 'Perfect for wholesale, shop manager, or VIP-specific behavior.', 'cartflush' ), function() use ( $rules, $roles ) { $this->render_map_timeout_rows( 'role_rules', 'role', $rules['role_rules'], $roles, __( 'Select a role', 'cartflush' ) ); } );
-									$this->render_rule_card( __( 'Product Rules', 'cartflush' ), __( 'Set a timeout for a single WooCommerce product ID.', 'cartflush' ), 'product-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Product ID', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['product_rules'] ), __( 'Use product-level rules when one item needs a special cart lifetime.', 'cartflush' ), function() use ( $rules ) { $this->render_product_timeout_rows( 'product_rules', $rules['product_rules'] ); } );
-									$this->render_rule_card( __( 'Category Rules', 'cartflush' ), __( 'Apply timeouts using WooCommerce product categories.', 'cartflush' ), 'category-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Category', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['category_rules'] ), __( 'Great for grouping timeouts across collections instead of product by product.', 'cartflush' ), function() use ( $rules, $categories ) { $this->render_map_timeout_rows( 'category_rules', 'slug', $rules['category_rules'], $categories, __( 'Select a category', 'cartflush' ) ); } );
-									$this->render_rule_card( __( 'Tag Rules', 'cartflush' ), __( 'Apply timeouts using WooCommerce product tags.', 'cartflush' ), 'tag-rule', __( 'Add Rule', 'cartflush' ), [ __( 'Tag', 'cartflush' ), __( 'Timeout', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['tag_rules'] ), __( 'Helpful for campaign, seasonal, or merchandising tag-based rules.', 'cartflush' ), function() use ( $rules, $tags ) { $this->render_map_timeout_rows( 'tag_rules', 'slug', $rules['tag_rules'], $tags, __( 'Select a tag', 'cartflush' ) ); } );
+									$this->render_rule_textarea(
+										__( 'Customer Type Rules', 'cartflush' ),
+										'cartflush_customer_type_rules_text',
+										__( 'One rule per line using customer_type|minutes.', 'cartflush' ),
+										"guest|20\nlogged_in|45",
+										$this->format_timeout_lines( $rules['customer_type_rules'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Role Rules', 'cartflush' ),
+										'cartflush_role_rules_text',
+										__( 'One rule per line using role|minutes.', 'cartflush' ),
+										"customer|30\nsubscriber|60",
+										$this->format_timeout_lines( $rules['role_rules'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Product Rules', 'cartflush' ),
+										'cartflush_product_rules_text',
+										__( 'One rule per line using product_id|minutes.', 'cartflush' ),
+										"123|15\n456|40",
+										$this->format_timeout_lines( $rules['product_rules'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Category Rules', 'cartflush' ),
+										'cartflush_category_rules_text',
+										__( 'One rule per line using category_slug|minutes.', 'cartflush' ),
+										"flash-sale|15\nhigh-ticket|90",
+										$this->format_timeout_lines( $rules['category_rules'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Tag Rules', 'cartflush' ),
+										'cartflush_tag_rules_text',
+										__( 'One rule per line using tag_slug|minutes.', 'cartflush' ),
+										"seasonal|20\nclearance|10",
+										$this->format_timeout_lines( $rules['tag_rules'] )
+									);
 									?>
 								</div>
 							</section>
@@ -305,12 +340,36 @@ class CartFlush_Admin {
 										<p><?php esc_html_e( 'Skip the auto-clear behavior completely when a cart matches one of the following conditions.', 'cartflush' ); ?></p>
 									</div>
 								</div>
-								<div class="cartflush-rule-grid">
+								<div class="cartflush-editor-grid">
 									<?php
-									$this->render_rule_card( __( 'Excluded Roles', 'cartflush' ), __( 'Exclude selected user roles from cart clearing.', 'cartflush' ), 'excluded-role', __( 'Add Exclusion', 'cartflush' ), [ __( 'Role', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['excluded_roles'] ), __( 'These roles will always bypass CartFlush regardless of timeout rules.', 'cartflush' ), function() use ( $rules, $roles ) { $this->render_simple_select_rows( 'excluded_roles', 'role', $rules['excluded_roles'], $roles, __( 'Select a role', 'cartflush' ) ); } );
-									$this->render_rule_card( __( 'Excluded Products', 'cartflush' ), __( 'Exclude carts that contain any of these products.', 'cartflush' ), 'excluded-product', __( 'Add Exclusion', 'cartflush' ), [ __( 'Product ID', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['excluded_products'] ), __( 'Useful for subscriptions, booking items, or products needing longer retention.', 'cartflush' ), function() use ( $rules ) { $this->render_simple_number_rows( 'excluded_products', 'product_id', $rules['excluded_products'] ); } );
-									$this->render_rule_card( __( 'Excluded Categories', 'cartflush' ), __( 'Exclude carts that contain products in these categories.', 'cartflush' ), 'excluded-category', __( 'Add Exclusion', 'cartflush' ), [ __( 'Category', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['excluded_categories'] ), __( 'Protect full product collections from the auto-clear workflow.', 'cartflush' ), function() use ( $rules, $categories ) { $this->render_simple_select_rows( 'excluded_categories', 'slug', $rules['excluded_categories'], $categories, __( 'Select a category', 'cartflush' ) ); } );
-									$this->render_rule_card( __( 'Excluded Tags', 'cartflush' ), __( 'Exclude carts that contain products with these tags.', 'cartflush' ), 'excluded-tag', __( 'Add Exclusion', 'cartflush' ), [ __( 'Tag', 'cartflush' ), __( 'Remove', 'cartflush' ) ], count( $rules['excluded_tags'] ), __( 'Best for campaigns or fulfillment groups that should never be auto-cleared.', 'cartflush' ), function() use ( $rules, $tags ) { $this->render_simple_select_rows( 'excluded_tags', 'slug', $rules['excluded_tags'], $tags, __( 'Select a tag', 'cartflush' ) ); } );
+									$this->render_rule_textarea(
+										__( 'Excluded Roles', 'cartflush' ),
+										'cartflush_excluded_roles_text',
+										__( 'One role per line.', 'cartflush' ),
+										"shop_manager\nwholesale_customer",
+										$this->format_list_lines( $rules['excluded_roles'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Excluded Products', 'cartflush' ),
+										'cartflush_excluded_products_text',
+										__( 'One product ID per line.', 'cartflush' ),
+										"123\n456",
+										$this->format_list_lines( $rules['excluded_products'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Excluded Categories', 'cartflush' ),
+										'cartflush_excluded_categories_text',
+										__( 'One category slug per line.', 'cartflush' ),
+										"high-ticket\nsubscriptions",
+										$this->format_list_lines( $rules['excluded_categories'] )
+									);
+									$this->render_rule_textarea(
+										__( 'Excluded Tags', 'cartflush' ),
+										'cartflush_excluded_tags_text',
+										__( 'One tag slug per line.', 'cartflush' ),
+										"fragile\nmade-to-order",
+										$this->format_list_lines( $rules['excluded_tags'] )
+									);
 									?>
 								</div>
 							</section>
@@ -408,7 +467,20 @@ class CartFlush_Admin {
 				</section>
 			</div>
 
-			<?php $this->render_templates( $roles, $customer_types, $categories, $tags ); ?>
+		</div>
+		<?php
+	}
+
+	private function render_rule_textarea( $title, $name, $description, $placeholder, $value ) {
+		?>
+		<div class="cartflush-editor-card">
+			<h3><?php echo esc_html( $title ); ?></h3>
+			<p><?php echo esc_html( $description ); ?></p>
+			<textarea name="<?php echo esc_attr( $name ); ?>" rows="6" placeholder="<?php echo esc_attr( $placeholder ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
+			<div class="cartflush-editor-card__sample">
+				<span><?php esc_html_e( 'Sample', 'cartflush' ); ?></span>
+				<pre><?php echo esc_html( $placeholder ); ?></pre>
+			</div>
 		</div>
 		<?php
 	}
@@ -497,6 +569,138 @@ class CartFlush_Admin {
 		$options = is_array( $options ) ? $options : [];
 		if ( $selected && ! isset( $options[ $selected ] ) ) { $options = [ $selected => $selected ] + $options; }
 		?><select class="regular-text" name="<?php echo esc_attr( $name ); ?>"><option value=""><?php echo esc_html( $placeholder ); ?></option><?php foreach ( $options as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( $selected, (string) $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select><?php
+	}
+
+	private function build_rules_from_text_inputs( $data ) {
+		$data = is_array( $data ) ? wp_unslash( $data ) : [];
+
+		return [
+			'customer_type_rules' => $this->parse_timeout_text( isset( $data['cartflush_customer_type_rules_text'] ) ? $data['cartflush_customer_type_rules_text'] : '', 'sanitize_key', [ 'guest', 'logged_in' ] ),
+			'role_rules'          => $this->parse_timeout_text( isset( $data['cartflush_role_rules_text'] ) ? $data['cartflush_role_rules_text'] : '', 'sanitize_key' ),
+			'product_rules'       => $this->parse_integer_timeout_text( isset( $data['cartflush_product_rules_text'] ) ? $data['cartflush_product_rules_text'] : '' ),
+			'category_rules'      => $this->parse_timeout_text( isset( $data['cartflush_category_rules_text'] ) ? $data['cartflush_category_rules_text'] : '', 'sanitize_title' ),
+			'tag_rules'           => $this->parse_timeout_text( isset( $data['cartflush_tag_rules_text'] ) ? $data['cartflush_tag_rules_text'] : '', 'sanitize_title' ),
+			'excluded_roles'      => $this->parse_list_text( isset( $data['cartflush_excluded_roles_text'] ) ? $data['cartflush_excluded_roles_text'] : '', 'sanitize_key' ),
+			'excluded_products'   => $this->parse_integer_list_text( isset( $data['cartflush_excluded_products_text'] ) ? $data['cartflush_excluded_products_text'] : '' ),
+			'excluded_categories' => $this->parse_list_text( isset( $data['cartflush_excluded_categories_text'] ) ? $data['cartflush_excluded_categories_text'] : '', 'sanitize_title' ),
+			'excluded_tags'       => $this->parse_list_text( isset( $data['cartflush_excluded_tags_text'] ) ? $data['cartflush_excluded_tags_text'] : '', 'sanitize_title' ),
+		];
+	}
+
+	public function maybe_sync_settings_to_rules() {
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		if ( ! isset( $_GET['page'] ) || 'cartflush-settings' !== sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
+			return;
+		}
+
+		if ( empty( $_GET['settings-updated'] ) ) {
+			return;
+		}
+
+		$rules = $this->build_rules_from_saved_settings();
+		update_option( CartFlush_Rules::OPTION_NAME, $this->rules->normalize_rules_data( $rules ) );
+	}
+
+	private function build_rules_from_saved_settings() {
+		return $this->build_rules_from_text_inputs(
+			[
+				'cartflush_customer_type_rules_text' => get_option( 'cartflush_customer_type_rules_text', '' ),
+				'cartflush_role_rules_text'          => get_option( 'cartflush_role_rules_text', '' ),
+				'cartflush_product_rules_text'       => get_option( 'cartflush_product_rules_text', '' ),
+				'cartflush_category_rules_text'      => get_option( 'cartflush_category_rules_text', '' ),
+				'cartflush_tag_rules_text'           => get_option( 'cartflush_tag_rules_text', '' ),
+				'cartflush_excluded_roles_text'      => get_option( 'cartflush_excluded_roles_text', '' ),
+				'cartflush_excluded_products_text'   => get_option( 'cartflush_excluded_products_text', '' ),
+				'cartflush_excluded_categories_text' => get_option( 'cartflush_excluded_categories_text', '' ),
+				'cartflush_excluded_tags_text'       => get_option( 'cartflush_excluded_tags_text', '' ),
+			]
+		);
+	}
+
+	private function parse_timeout_text( $value, $sanitizer, $allowed_keys = null ) {
+		$parsed = [];
+		foreach ( $this->get_text_lines( $value ) as $line ) {
+			$parts = preg_split( '/\s*\|\s*/', $line );
+			if ( ! is_array( $parts ) || count( $parts ) < 2 ) {
+				continue;
+			}
+			$key     = call_user_func( $sanitizer, $parts[0] );
+			$timeout = absint( $parts[1] );
+			if ( ! $key || $timeout <= 0 ) {
+				continue;
+			}
+			if ( is_array( $allowed_keys ) && ! in_array( $key, $allowed_keys, true ) ) {
+				continue;
+			}
+			$parsed[ $key ] = $timeout;
+		}
+		return $parsed;
+	}
+
+	private function parse_integer_timeout_text( $value ) {
+		$parsed = [];
+		foreach ( $this->get_text_lines( $value ) as $line ) {
+			$parts = preg_split( '/\s*\|\s*/', $line );
+			if ( ! is_array( $parts ) || count( $parts ) < 2 ) {
+				continue;
+			}
+			$key     = absint( $parts[0] );
+			$timeout = absint( $parts[1] );
+			if ( $key > 0 && $timeout > 0 ) {
+				$parsed[ $key ] = $timeout;
+			}
+		}
+		return $parsed;
+	}
+
+	private function parse_list_text( $value, $sanitizer ) {
+		$parsed = [];
+		foreach ( $this->get_text_lines( $value ) as $line ) {
+			$item = call_user_func( $sanitizer, $line );
+			if ( $item ) {
+				$parsed[] = $item;
+			}
+		}
+		return array_values( array_unique( $parsed ) );
+	}
+
+	private function parse_integer_list_text( $value ) {
+		$parsed = [];
+		foreach ( $this->get_text_lines( $value ) as $line ) {
+			$item = absint( $line );
+			if ( $item > 0 ) {
+				$parsed[] = $item;
+			}
+		}
+		return array_values( array_unique( $parsed ) );
+	}
+
+	private function get_text_lines( $value ) {
+		$value = is_string( $value ) ? $value : '';
+		$lines = preg_split( '/\r\n|\r|\n/', $value );
+		return array_values(
+			array_filter(
+				array_map( 'trim', is_array( $lines ) ? $lines : [] ),
+				static function( $line ) {
+					return '' !== $line;
+				}
+			)
+		);
+	}
+
+	private function format_timeout_lines( $items ) {
+		$lines = [];
+		foreach ( $items as $key => $value ) {
+			$lines[] = $key . '|' . absint( $value );
+		}
+		return implode( "\n", $lines );
+	}
+
+	private function format_list_lines( $items ) {
+		return implode( "\n", array_map( 'strval', $items ) );
 	}
 
 	private function render_remove_button() {
