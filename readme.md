@@ -5,7 +5,7 @@ Tags: woocommerce cart cleanup, abandoned cart, cart timeout, woocommerce optimi
 Requires at least: 5.8  
 Tested up to: 6.8  
 Requires PHP: 7.4  
-Stable tag: 2.3.0  
+Stable tag: 2.3.1  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -196,6 +196,13 @@ Yes. All plugin options are deleted during uninstall.
 4. Saved configuration overview
 
 ## Changelog
+
+### 2.3.1
+
+- Refactored the settings page save flow to use the default WordPress settings method
+- Simplified rule editing with text-based rule groups for timeout and exclusion settings
+- Improved settings page structure and admin styling for a cleaner editing experience
+- Kept CSV and JSON import/export tools available from the admin page
 
 ### 2.3.0
 
